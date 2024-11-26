@@ -11,7 +11,7 @@ function HomePage() {
           Home Page
         </Typography>
         <Typography variant="body1" component="p">
-          This is the home page
+          This is the home page benji es gay
         </Typography>
       </Box>
     </Container>
