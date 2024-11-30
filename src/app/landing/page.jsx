@@ -1,22 +1,25 @@
-"use client"; // Indica que es un componente de cliente
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { Container, Typography, Box, Card, CardMedia, CardContent, CardActions, Button, IconButton, Link, Grid } from '@mui/material';
-import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
-import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
-import FacebookIcon from '@mui/icons-material/Facebook';
-import TwitterIcon from '@mui/icons-material/Twitter';
-import InstagramIcon from '@mui/icons-material/Instagram';
-import YoutubeIcon from '@mui/icons-material/YouTube';
-import EmailIcon from '@mui/icons-material/Email';
-import PhoneIcon from '@mui/icons-material/Phone';
-import LocationOnIcon from '@mui/icons-material/LocationOn';
-import NavCategorias from './navcategorias/navcategorias';
+import React, { useEffect, useState, useRef } from "react";
+import { useRouter } from "next/navigation";
+import {
+  Container,
+  Typography,
+  Box,
+  Card,
+  CardMedia,
+  CardContent,
+  CardActions,
+  Button,
+  IconButton,
+} from "@mui/material";
+import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
+import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
+import NavCategorias from "../navcategorias/NavCategorias";
 
-// 1920 * 600
 const images = [
-  'https://i.pinimg.com/originals/1e/78/91/1e789149967aa9ecee20ef58911a9d17.jpg',
-  'https://iselamendez.mx/farmacia/wp-content/uploads/2024/11/Copia-de-WEB-jpg.webp',
+  "https://i.pinimg.com/originals/1e/78/91/1e789149967aa9ecee20ef58911a9d17.jpg",
+  "https://iselamendez.mx/farmacia/wp-content/uploads/2024/11/Copia-de-WEB-jpg.webp",
 ];
 
 const products = [
@@ -28,176 +31,187 @@ const products = [
 ];
 
 function Landing() {
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const carouselRef = useRef(null);
+  const router = useRouter();
+  const [session, setSession] = useState(null);
 
+  // Cargar la sesión inicial desde localStorage
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
-    }, 3000);
-    return () => clearInterval(interval);
+    const userSession = localStorage.getItem("user");
+    setSession(userSession ? JSON.parse(userSession) : null);
   }, []);
 
+  // Escuchar cambios en localStorage para detectar la eliminación de la sesión
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const userSession = localStorage.getItem("user");
+      setSession(userSession ? JSON.parse(userSession) : null);
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
+
+  const handleWheelScroll = (event) => {
+    event.preventDefault();
+    if (carouselRef.current) {
+      carouselRef.current.scrollBy({
+        left: event.deltaY < 0 ? -200 : 200,
+        behavior: "smooth",
+      });
+    }
+  };
+
   const handlePrevProduct = () => {
-    document.getElementById("product-carousel").scrollBy({ left: -150, behavior: "smooth" });
+    if (carouselRef.current) {
+      carouselRef.current.scrollBy({ left: -200, behavior: "smooth" });
+    }
   };
 
   const handleNextProduct = () => {
-    document.getElementById("product-carousel").scrollBy({ left: 150, behavior: "smooth" });
+    if (carouselRef.current) {
+      carouselRef.current.scrollBy({ left: 200, behavior: "smooth" });
+    }
   };
+
+  const handleAddToCart = () => {
+    if (!session) {
+      router.push("/login");
+    } else {
+      console.log("Producto agregado al carrito por:", session.name);
+    }
+  };
+
+  const cardWidth = 200;
+  const visibleCards = 5;
+  const carouselWidth = visibleCards * cardWidth;
 
   return (
     <>
-          <NavCategorias />
+      <NavCategorias />
 
-      <Container maxWidth="md" sx={{ mb: 5 }}>
+      <Container maxWidth="xl" sx={{ mb: 5 }}>
         <Box display="flex" flexDirection="column" alignItems="center" mt={0}>
-          
-          {/* Carrusel de imágenes automático */}
-          <Box mt={3} width="100%" display="flex" flexDirection="column" alignItems="center">
+          <Box
+            mt={3}
+            width="100%"
+            display="flex"
+            flexDirection="column"
+            alignItems="center"
+          >
             <img
-              src={images[currentIndex]}
-              alt={`Imagen ${currentIndex + 1}`}
-              style={{ maxWidth: '100%', borderRadius: '2px' }}
+              src={images[0]}
+              alt={`Imagen 1`}
+              style={{ maxWidth: "100%", borderRadius: "2px" }}
             />
           </Box>
 
-          {/* Carrusel de Cards */}
-          <Box mt={2} width="100%" position="relative" overflow="hidden">
-            <Typography variant="h5" component="h1" sx={{ fontWeight: 'bold' }} gutterBottom>
+          <Box
+            mt={2}
+            width={carouselWidth}
+            position="relative"
+            overflow="hidden"
+            onWheel={handleWheelScroll}
+          >
+            <Typography
+              variant="h5"
+              component="h1"
+              sx={{ fontWeight: "bold" }}
+              gutterBottom
+            >
               Productos nuevos
             </Typography>
 
-            {/* Flecha Izquierda */}
-            <IconButton onClick={handlePrevProduct} sx={{ position: 'absolute', top: '50%', left: '-5px', zIndex: 10 }}>
+            <IconButton
+              onClick={handlePrevProduct}
+              sx={{
+                position: "absolute",
+                top: "50%",
+                left: "-5px",
+                zIndex: 10,
+              }}
+            >
               <ArrowBackIosIcon />
             </IconButton>
 
-            {/* Carrusel de Productos */}
             <Box
-              id="product-carousel"
+              ref={carouselRef}
               display="flex"
-              overflow="hidden"
               gap={2}
+              overflow="auto"
               py={1}
               px={1}
-              sx={{ scrollSnapType: 'x mandatory', scrollBehavior: 'smooth' }}
+              sx={{
+                scrollSnapType: "x mandatory",
+                scrollBehavior: "smooth",
+                "&::-webkit-scrollbar": { display: "none" },
+              }}
             >
               {products.map((product) => (
-                <Card key={product.id} sx={{ minWidth: 200, maxWidth: 200, textAlign: 'center', padding: 0.2, boxShadow: '0px 0px 3px 1px rgba(44,116,47,1)' }}>
+                <Card
+                  key={product.id}
+                  sx={{
+                    minWidth: cardWidth,
+                    maxWidth: cardWidth,
+                    textAlign: "center",
+                    padding: 0.2,
+                    boxShadow: "0px 0px 3px 1px rgba(44,116,47,1)",
+                    scrollSnapAlign: "center",
+                  }}
+                >
                   <CardMedia
                     component="img"
                     height="120"
                     image={product.image}
                     alt={product.name}
-                    sx={{ objectFit: 'contain', backgroundColor: '#ffff0', borderRadius: 1 }}
+                    sx={{
+                      objectFit: "contain",
+                      backgroundColor: "#ffff0",
+                      borderRadius: 1,
+                    }}
                   />
 
                   <CardContent sx={{ paddingBottom: 0.5 }}>
-                    <Typography variant="body2" color="text.secondary" sx={{ color: '#2C742F' }}>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ color: "#2C742F" }}
+                    >
                       {product.name}
                     </Typography>
-                    <Typography variant="h6" component="div" >
+                    <Typography variant="h6" component="div">
                       {product.price}
                     </Typography>
                   </CardContent>
-                  
-                  <CardActions sx={{ justifyContent: 'center', paddingTop: 0 }}>
-                    <Button size="small" variant="contained" sx={{ background: '#00B207', borderRadius: 4 }}>Agregar al carrito</Button>
+
+                  <CardActions sx={{ justifyContent: "center", paddingTop: 0 }}>
+                    <Button
+                      size="small"
+                      variant="contained"
+                      sx={{ background: "#00B207", borderRadius: 4 }}
+                      onClick={handleAddToCart}
+                    >
+                      Agregar al carrito
+                    </Button>
                   </CardActions>
                 </Card>
               ))}
             </Box>
 
-            {/* Flecha Derecha */}
-            <IconButton onClick={handleNextProduct} sx={{ position: 'absolute', top: '50%', right: '-5px', zIndex: 10 }}>
+            <IconButton
+              onClick={handleNextProduct}
+              sx={{
+                position: "absolute",
+                top: "50%",
+                right: "-5px",
+                zIndex: 10,
+              }}
+            >
               <ArrowForwardIosIcon />
             </IconButton>
           </Box>
-          
         </Box>
       </Container>
-      
-      {/* Footer en ancho completo */}
-      <Box
-        component="footer"
-        sx={{
-          backgroundColor: '#D9D9D9',
-          color: '#170F49',
-          py: 4,
-          px: 1,
-          width: '100%',
-        }}
-      >
-        <Container maxWidth="lg">
-          <Grid container spacing={4}>
-            {/* Primera Sección - Logo y Redes Sociales */}
-            <Grid item xs={12} md={4} textAlign={{ xs: 'center', md: 'left' }}>
-              <Box mb={2}>
-                <img src="https://via.placeholder.com/150x50" alt="Logo" style={{ maxWidth: '100%' }} />
-              </Box>
-              <Box sx={{pb: 1, color: '#6F6C90'}}>
-                <Typography>
-                  Lorem ipsum dolor sit amet consectetur adipisicing elit. Aliquam quasi temporibus
-                </Typography>
-              </Box>
-              <Box>
-                <IconButton aria-label="Facebook" color="inherit" sx={{color:'#00B207'}}>
-                  <FacebookIcon />
-                </IconButton>
-                <IconButton aria-label="Twitter" color="inherit" sx={{color:'#00B207'}}>
-                  <TwitterIcon />
-                </IconButton>
-                <IconButton aria-label="Instagram" color="inherit" sx={{color:'#00B207'}}>
-                  <InstagramIcon />
-                </IconButton>
-                <IconButton aria-label="Youtube" color="inherit" sx={{color:'#00B207'}}>
-                  <YoutubeIcon />
-                </IconButton>
-              </Box>
-            </Grid>
-
-            {/* Segunda Sección - Productos */}
-            <Grid item xs={12} md={4} textAlign={{ xs: 'center', md: 'left' }}>
-              <Typography variant="h6" sx={{ fontWeight: 'bold'}} gutterBottom>
-                Productos
-              </Typography>
-              <Grid container spacing={1} sx={{ color: '#6F6C90' }}>
-                <Grid item xs={6}>
-                  <Typography variant="body2">Nutrición</Typography>
-                  <Typography variant="body2">Dermatología</Typography>
-                  <Typography variant="body2">Diabetes</Typography>
-                  <Typography variant="body2">Bebés</Typography>
-                  <Typography variant="body2">Medicamentos</Typography>
-                </Grid>
-                <Grid item xs={6}>
-                  <Typography variant="body2">Cuidado personal</Typography>
-                  <Typography variant="body2">Salud sexual</Typography>
-                  <Typography variant="body2">Cuidado ocular</Typography>
-                </Grid>
-              </Grid>
-            </Grid>
-
-            {/* Tercera Sección - Contáctanos */}
-            <Grid item xs={12} md={4} textAlign={{ xs: 'center', md: 'left' }}>
-              <Typography variant="h6" sx={{ fontWeight: 'bold' }} gutterBottom>
-                Contáctanos
-              </Typography>
-              <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', gap: 1, color: '#6F6C90' }}>
-                <EmailIcon fontSize="small" />
-                contacto@miempresa.com
-              </Typography>
-              <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', gap: 1, color: '#6F6C90' }}>
-                <PhoneIcon fontSize="small" />
-                +52 55 1234 5678
-              </Typography>
-              <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', gap: 1, color: '#6F6C90' }}>
-                <LocationOnIcon fontSize="small" />
-                Calle Falsa 123, Ciudad
-              </Typography>
-            </Grid>
-          </Grid>
-        </Container>
-      </Box>
     </>
   );
 }
