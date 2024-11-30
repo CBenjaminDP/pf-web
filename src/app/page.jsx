@@ -1,20 +1,22 @@
 import React from 'react';
 import { Container, Typography, Box } from '@mui/material';
+import RegisterForm from '../app/register/RegisterForm';
+import LoginForm from '../app/login/LoginForm';
+import RecoverPassword1 from './forgetPassword/RecoverPassword1';
+import RecoverPassword2 from './forgetPassword/RecoverPassword2';
+import Navbar from '@/components/navbar/Navbar';
+import Footer from '@/components/footer/Footer';
 
 // Aqui se debe de hacer la Landing Page de la aplicación
 
 function HomePage() {
   return (
-    <Container maxWidth="md">
-      <Box display="flex" flexDirection="column" alignItems="center" mt={8}>
-        <Typography variant="h3" component="h1" gutterBottom>
-          Home Page
-        </Typography>
-        <Typography variant="body1" component="p">
-          This is the home page benji es gay
-        </Typography>
-      </Box>
-    </Container>
+    <Box>
+      <LoginForm/>
+      <RegisterForm/>
+      <RecoverPassword1/>
+      <RecoverPassword2/>
+    </Box>
   );
 }
 
