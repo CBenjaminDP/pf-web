@@ -13,15 +13,14 @@ import {
 } from "@mui/material";
 import { GlobalStyles } from "@mui/material";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
-import { useRouter } from "next/navigation";
-import { toast, ToastContainer } from "react-toastify"; // Importa Toastify
-import "react-toastify/dist/ReactToastify.css"; // Importa los estilos
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import AuthGuard from "@/components/AuthGuard";
 
 function PerfilPage() {
   const [direcciones, setDirecciones] = useState([]);
   const [pedido, setPedido] = useState([]);
-  const router = useRouter();
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchDirecciones = async () => {
@@ -53,35 +52,41 @@ function PerfilPage() {
     };
 
     const fetchPedido = async () => {
-      const Pedido = [
-        {
-          id: 1,
-          orden: "Orden No. 1312141",
-          fecha: "23/10/2024",
-          estado: "En camino",
-          total: "$500.00",
-          img: "https://www.fahorro.com/media/catalog/product/3/3/3337875847292_1.jpg",
-        },
-      ];
-      setPedido(Pedido);
+      try {
+        const response = await fetch("http://localhost:3001/api/sales"); // Ajusta según tu backend
+        if (!response.ok) throw new Error("Error al obtener los pedidos");
+        const data = await response.json();
+        const pedidosAdaptados = data.map((pedido) => ({
+          id: pedido.id,
+          orden: `Orden No. ${pedido.id}`,
+          fecha: pedido.fecha, // Ajusta según los datos del backend
+          estado: pedido.estado,
+          total: `$${pedido.total}`,
+          img: pedido.img || "https://via.placeholder.com/150", // Imagen por defecto
+        }));
+        setPedido(pedidosAdaptados);
+      } catch (error) {
+        setError("Error al cargar los pedidos.");
+        console.error("Error al obtener los pedidos:", error);
+      }
     };
 
-    fetchPedido();
     fetchDirecciones();
+    fetchPedido();
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem("user"); // Elimina la sesión del localStorag
-    toast.success("Sesión cerrada exitosamente."); // Muestra la alerta de éxito
+    localStorage.removeItem("user");
+    toast.success("Sesión cerrada exitosamente.");
     setTimeout(() => {
-      window.location.href = "/"; // Redirige al home y fuerza una recarga completa
-    }, 1500); // Espera 1.5 segundos antes de redirigir
+      window.location.href = "/";
+    }, 1500);
   };
 
   return (
     <>
       <AuthGuard>
-        <ToastContainer /> {/* Contenedor de Toastify */}
+        <ToastContainer />
         <GlobalStyles styles={{ body: { margin: 0, padding: 0 } }} />
         <Box sx={{ padding: 2, display: "flex", width: "100%" }}>
           <Box sx={{ width: { xs: "100%", md: "60%" } }}>
@@ -129,7 +134,6 @@ function PerfilPage() {
                       margin="normal"
                     />
                   </Box>
-
                   <Box
                     sx={{
                       display: "flex",
@@ -165,7 +169,6 @@ function PerfilPage() {
                   </Button>
                 </Box>
               </Grid>
-
               <Grid item xs={12} md={10}>
                 <Typography variant="h6" sx={{ fontWeight: "bold" }}>
                   Direcciones de envío
@@ -180,7 +183,7 @@ function PerfilPage() {
                         borderRadius: 2,
                         marginBottom: 2,
                         padding: 2,
-                        width: "250px !important",
+                        width: "250px",
                         height: "200px",
                       }}
                     >
@@ -201,29 +204,16 @@ function PerfilPage() {
                     </Card>
                   ))}
                 </Box>
-                <Box sx={{ display: "flex", justifyContent: "center" }}>
-                  <Button
-                    variant="contained"
-                    sx={{
-                      backgroundColor: "#568D2E",
-                      color: "white",
-                      fontWeight: "bold",
-                      width: "350px",
-                    }}
-                  >
-                    + Nueva dirección
-                  </Button>
-                </Box>
               </Grid>
             </Grid>
           </Box>
-
-          <Box sx={{ width: { xs: "100%", md: "40%", sm: "40%" } }}>
+          <Box sx={{ width: { xs: "100%", md: "40%" } }}>
             <Grid>
               <Typography variant="h4" sx={{ fontWeight: "bold", mb: 2 }}>
                 Mis pedidos
               </Typography>
               <Divider sx={{ my: 2 }} />
+              {error && <Typography color="error">{error}</Typography>}
               <Card sx={{ width: "100%", backgroundColor: "#F4F4F4" }}>
                 {pedido.map((pedido) => (
                   <CardContent
@@ -231,7 +221,7 @@ function PerfilPage() {
                     key={pedido.id}
                   >
                     <Box sx={{ width: "120px" }}>
-                      <img src={pedido.img} alt="" width={100} />
+                      <img src={pedido.img} alt="Imagen del producto" width={100} />
                     </Box>
                     <Box sx={{ width: "300px" }}>
                       <Typography variant="body1" fontWeight="bold">
@@ -239,7 +229,7 @@ function PerfilPage() {
                       </Typography>
                       <Typography>Pedido el: {pedido.fecha}</Typography>
                       <Typography>
-                        Estado: <b color="#568D2E">{pedido.estado}</b>
+                        Estado: <b style={{ color: "#568D2E" }}>{pedido.estado}</b>
                       </Typography>
                       <Typography>Total: {pedido.total}</Typography>
                     </Box>
@@ -262,7 +252,6 @@ function PerfilPage() {
             </Grid>
           </Box>
         </Box>
-        {/* Botón de cerrar sesión */}
         <Box sx={{ display: "flex", justifyContent: "center", mt: 5 }}>
           <Button
             variant="contained"
