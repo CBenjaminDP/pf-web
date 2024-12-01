@@ -13,11 +13,20 @@ const Navbar = () => {
   const [searchTerm, setSearchTerm] = useState(""); // Estado para capturar el término de búsqueda
   const [isLoggedIn, setIsLoggedIn] = useState(false); // Estado para verificar si hay una sesión activa
   const [isCartOpen, setIsCartOpen] = useState(false); // Estado para abrir/cerrar el carrito
+  const [userRoles, setUserRoles] = useState([]); // Estado para almacenar los roles del usuario
 
-  // Función para verificar si hay sesión activa
+  // Función para verificar si hay sesión activa y obtener los roles del usuario
   const checkSession = () => {
-    const user = localStorage.getItem("user");
-    setIsLoggedIn(!!user); // Si hay un usuario en el localStorage, está logueado
+    const user = JSON.parse(localStorage.getItem("user"));
+    console.log("Usuario:", user);
+    
+    if (user) {
+      setIsLoggedIn(true);
+      setUserRoles(user.role); // Asume que el objeto de usuario tiene una propiedad 'role' que es un array
+    } else {
+      setIsLoggedIn(false);
+      setUserRoles([]);
+    }
   };
 
   useEffect(() => {
@@ -60,6 +69,13 @@ const Navbar = () => {
       router.push("/login"); // Si no está logueado, redirige a /login
     }
   };
+
+  const handleAdminClick = () => {
+    router.push("/adminDash"); // Redirige a /adminDash
+  };
+
+  // Verifica si el usuario tiene el rol de "empleado" o "gerente"
+  const hasAdminRole = userRoles.includes("empleado") || userRoles.includes("gerente");
 
   return (
     <>
@@ -169,7 +185,7 @@ const Navbar = () => {
             </IconButton>
           </Box>
 
-          {/* Iconos de carrito y perfil */}
+          {/* Iconos de carrito, perfil y admin */}
           <Box
             sx={{
               display: "flex",
@@ -177,6 +193,16 @@ const Navbar = () => {
               gap: "20px", // Espaciado entre los iconos
             }}
           >
+            {hasAdminRole && (
+              <IconButton onClick={handleAdminClick}>
+                <Image
+                  src="/img/gestion-de-proyectos.png" // Ruta de la imagen del admin
+                  alt="Admin Dashboard"
+                  width={30} // Ancho de la imagen
+                  height={30} // Altura de la imagen
+                />
+              </IconButton>
+            )}
             <IconButton onClick={handleCartClick}>
               <i className="bi bi-cart" style={{ fontSize: "30px", color: "black" }}></i>{" "}
               {/* Carrito de compras */}
