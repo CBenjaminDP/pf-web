@@ -1,7 +1,9 @@
 "use client";
 
 import React, { useEffect, useState, useRef } from "react";
+import axios from "axios";
 import { useRouter } from "next/navigation";
+import { useCart } from "@/context/CartContext";
 import {
   Container,
   Typography,
@@ -22,26 +24,46 @@ const images = [
   "https://iselamendez.mx/farmacia/wp-content/uploads/2024/11/Copia-de-WEB-jpg.webp",
 ];
 
-const products = [
-  { id: 1, name: "Producto 1", price: "$10.00", image: "https://m.media-amazon.com/images/I/61uutWxTEIL.jpg" },
-  { id: 2, name: "Producto 2", price: "$15.00", image: "https://www.costco.com.mx/medias/sys_master/products/h8c/hb1/79642016677918.webp" },
-  { id: 3, name: "Producto 3", price: "$20.00", image: "https://images.ctfassets.net/ir0g9r0fng0m/4owIq4DqC4MnZtFUb1o6hv/a7f9a7cf0d306ae548c2dd0a14367df4/tylenol-caja-con-frasco-10-tabletas-980-x-980-px-1-es-mx" },
-  { id: 4, name: "Producto 4", price: "$25.00", image: "https://hebmx.vtexassets.com/arquivos/ids/735349-800-800?v=638521788586070000&width=800&height=800&aspect=true" },
-  { id: 5, name: "Producto 5", price: "$30.00", image: "https://www.fahorro.com/media/catalog/product/7/5/7502223709614.png?optimize=medium&bg-color=255,255,255&fit=bounds&height=700&width=700&canvas=700:700&format=jpeg" },
-];
-
 function Landing() {
   const carouselRef = useRef(null);
   const router = useRouter();
+  const { addToCart } = useCart();
   const [session, setSession] = useState(null);
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Cargar la sesión inicial desde localStorage
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/products`
+        );
+        console.log("Productos cargados:", response.data);
+        setProducts(response.data);
+      } catch (error) {
+        console.error("Error al cargar productos:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
+  const handleAddToCart = (product) => {
+    if (!session) {
+      router.push("/login");
+    } else {
+      console.log("Producto agregado al carrito por:", session.name);
+      addToCart(product);
+    }
+  };
+
   useEffect(() => {
     const userSession = localStorage.getItem("user");
     setSession(userSession ? JSON.parse(userSession) : null);
   }, []);
 
-  // Escuchar cambios en localStorage para detectar la eliminación de la sesión
   useEffect(() => {
     const handleStorageChange = () => {
       const userSession = localStorage.getItem("user");
@@ -71,14 +93,6 @@ function Landing() {
   const handleNextProduct = () => {
     if (carouselRef.current) {
       carouselRef.current.scrollBy({ left: 200, behavior: "smooth" });
-    }
-  };
-
-  const handleAddToCart = () => {
-    if (!session) {
-      router.push("/login");
-    } else {
-      console.log("Producto agregado al carrito por:", session.name);
     }
   };
 
@@ -147,55 +161,65 @@ function Landing() {
                 "&::-webkit-scrollbar": { display: "none" },
               }}
             >
-              {products.map((product) => (
-                <Card
-                  key={product.id}
-                  sx={{
-                    minWidth: cardWidth,
-                    maxWidth: cardWidth,
-                    textAlign: "center",
-                    padding: 0.2,
-                    boxShadow: "0px 0px 3px 1px rgba(44,116,47,1)",
-                    scrollSnapAlign: "center",
-                  }}
-                >
-                  <CardMedia
-                    component="img"
-                    height="120"
-                    image={product.image}
-                    alt={product.name}
+              {loading ? (
+                <Typography>Cargando productos...</Typography>
+              ) : products.length > 0 ? (
+                products.map((product) => (
+                  <Card
+                    key={product.id}
                     sx={{
-                      objectFit: "contain",
-                      backgroundColor: "#ffff0",
-                      borderRadius: 1,
+                      minWidth: cardWidth,
+                      maxWidth: cardWidth,
+                      textAlign: "center",
+                      padding: 0.2,
+                      boxShadow: "0px 0px 3px 1px rgba(44,116,47,1)",
+                      scrollSnapAlign: "center",
                     }}
-                  />
+                  >
+                    <CardMedia
+                      component="img"
+                      height="120"
+                      image={
+                        product.image.startsWith("data:image/")
+                          ? product.image
+                          : `data:image/jpeg;base64,${product.image}`
+                      }
+                      alt={product.name}
+                      sx={{
+                        objectFit: "contain",
+                        backgroundColor: "#ffff0",
+                        borderRadius: 1,
+                      }}
+                    />
 
-                  <CardContent sx={{ paddingBottom: 0.5 }}>
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{ color: "#2C742F" }}
-                    >
-                      {product.name}
-                    </Typography>
-                    <Typography variant="h6" component="div">
-                      {product.price}
-                    </Typography>
-                  </CardContent>
+                    <CardContent sx={{ paddingBottom: 0.5 }}>
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ color: "#2C742F" }}
+                      >
+                        {product.name}
+                      </Typography>
+                      <Typography variant="h6" component="div">
+                        ${product.price.toFixed(2)}
+                      </Typography>
+                    </CardContent>
 
-                  <CardActions sx={{ justifyContent: "center", paddingTop: 0 }}>
-                    <Button
-                      size="small"
-                      variant="contained"
-                      sx={{ background: "#00B207", borderRadius: 4 }}
-                      onClick={handleAddToCart}
-                    >
-                      Agregar al carrito
-                    </Button>
-                  </CardActions>
-                </Card>
-              ))}
+                    <CardActions sx={{ justifyContent: "center", paddingTop: 0 }}>
+                      <Button
+                        size="small"
+                        variant="contained"
+                        sx={{ background: "#00B207", borderRadius: 4 }}
+                        onClick={() => handleAddToCart(product)}
+                      >
+                        Agregar al carrito
+                      </Button>
+                    </CardActions>
+                  </Card>
+                ))
+              ) : (
+                <Typography>No hay productos disponibles.</Typography>
+              )}
             </Box>
 
             <IconButton

@@ -1,6 +1,4 @@
-"use client";
-
-import React, { useState } from "react";
+import React from "react";
 import {
   Box,
   Drawer,
@@ -15,55 +13,18 @@ import {
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { useRouter } from "next/navigation";
+import { useCart } from "@/context/CartContext";
+
 
 const CartDrawer = ({ isOpen, onClose }) => {
-  const router = useRouter();
-
-  const [cartItems, setCartItems] = useState([
-    {
-      id: 1,
-      name: "Cerave Crema Hidratante Diaria de Rostro y Cuerpo para Piel Seca 454 gr",
-      price: 348.75,
-      image: "https://images.ctfassets.net/ir0g9r0fng0m/1leDbU1rGn4EXAfhCsEVOo/c903dba5adfa16dcd8cf874735e4cd5f/CeraVe.jpg",
-      quantity: 1,
-    },
-    {
-      id: 2,
-      name: "La Roche Posay Anthelios UV MUNE 400 Oil Control Fluido FPS 50+ 50 ml",
-      price: 348.75,
-      image: "https://www.laroche-posay.us/dw/image/v2/AAJM_PRD/on/demandware.static/-/Sites-lrp-us-Library/default/dw321fc925/images/skincare/sunscreen/anthelios-light-fluid-sunscreen-50.png",
-      quantity: 1,
-    },
-  ]);
-
-  const handleRemoveItem = (id) => {
-    setCartItems(cartItems.filter((item) => item.id !== id));
-  };
-
-  const handleQuantityChange = (id, delta) => {
-    setCartItems((prev) =>
-      prev.map((item) =>
-        item.id === id
-          ? { ...item, quantity: Math.max(1, item.quantity + delta) }
-          : item
-      )
-    );
-  };
-
-  const calculateTotal = () => {
-    return cartItems.reduce((total, item) => total + item.price * item.quantity, 0).toFixed(2);
-  };
-
-  const handleCheckout = () => {
-    router.push("/checkoutForm"); // Redirige a la página de checkout
-  };
+  const { cartItems, removeFromCart, updateQuantity, calculateTotal, redirectToCheckout } =
+    useCart();
 
   return (
     <Drawer anchor="right" open={isOpen} onClose={onClose}>
       <Box
         sx={{
-          width: { xs: "100%", sm: "400px" },
+          width: { xs: "100%", sm: "470px" },
           maxHeight: "100vh",
           display: "flex",
           flexDirection: "column",
@@ -100,7 +61,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
           <List>
             {cartItems.map((item) => (
               <ListItem
-                key={item.id}
+                key={item.product_id} // Usa un key único
                 sx={{
                   display: "flex",
                   alignItems: "center",
@@ -121,7 +82,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
                         variant="body1"
                         fontWeight="bold"
                         sx={{
-                          maxWidth: "200px", // Limita el ancho del texto
+                          maxWidth: "200px",
                           overflow: "hidden",
                           textOverflow: "ellipsis",
                           whiteSpace: "nowrap",
@@ -132,7 +93,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
                     }
                     secondary={
                       <Typography variant="body2" color="textSecondary">
-                        ${item.price.toFixed(2)}
+                        ${item.price ? Number(item.price).toFixed(2) : "0.00"}
                       </Typography>
                     }
                   />
@@ -142,19 +103,27 @@ const CartDrawer = ({ isOpen, onClose }) => {
                   <Button
                     size="small"
                     variant="outlined"
-                    onClick={() => handleQuantityChange(item.id, -1)}
+                    sx={{ minWidth: "30px", padding: "2px", fontSize: "12px" }}
+                    onClick={() => updateQuantity(item.product_id, -1)}
                   >
                     -
                   </Button>
-                  <Typography>{item.quantity}</Typography>
+                  <Typography sx={{ fontSize: "14px", margin: "0 5px" }}>
+                    {item.quantity}
+                  </Typography>
                   <Button
                     size="small"
                     variant="outlined"
-                    onClick={() => handleQuantityChange(item.id, 1)}
+                    sx={{ minWidth: "30px", padding: "2px", fontSize: "12px" }}
+                    onClick={() => updateQuantity(item.product_id, 1)}
                   >
                     +
                   </Button>
-                  <IconButton onClick={() => handleRemoveItem(item.id)} color="error">
+
+                  <IconButton
+                    onClick={() => removeFromCart(item.product_id)}
+                    color="error"
+                  >
                     <DeleteIcon />
                   </IconButton>
                 </Box>
@@ -180,7 +149,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
               backgroundColor: "#779341",
               "&:hover": { backgroundColor: "#567728" },
             }}
-            onClick={handleCheckout} // Llama a la función que redirige
+            onClick={() => redirectToCheckout()}
           >
             Proceder al pago
           </Button>
