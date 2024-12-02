@@ -26,7 +26,7 @@ const Sells = () => {
       .get(`${process.env.NEXT_PUBLIC_API_URL}/api/sales`)
       .then((response) => {
         // Filtrar solo las ventas con status "sold"
-        const ventasFiltradas = response.data.filter((venta) => venta.status === "sold");
+        const ventasFiltradas = response.data.filter((venta) => venta.status === "Comprado");
         setVentas(ventasFiltradas);
       })
       .catch((error) => console.error("Error al obtener ventas:", error));

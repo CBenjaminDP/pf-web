@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Box, Button, Card, Typography, Grid, Divider } from "@mui/material";
-import { useRouter } from "next/navigation"; // Importar useRouter para redirección
+import { Box, Button, Card, Typography, Grid, Divider, TextField } from "@mui/material";
+import { useRouter } from "next/navigation";
 import "react-toastify/dist/ReactToastify.css";
 import { toast, ToastContainer } from "react-toastify";
 import AuthGuard from "@/components/AuthGuard";
-import axios from "axios"; // Importamos axios
+import axios from "axios";
 
 function CheckoutFormPage() {
   const router = useRouter();
@@ -15,15 +15,14 @@ function CheckoutFormPage() {
   const [selectedDireccion, setSelectedDireccion] = useState(null);
   const [selectedMetodoPago, setSelectedMetodoPago] = useState(null);
   const [productos, setProductos] = useState([]);
-  const [isCardPayment, setIsCardPayment] = useState(false);
+  const [paymentInfo, setPaymentInfo] = useState({ email: "", password: "", cardInfo: {} });
+  const [userSession, setUserSession] = useState(null);
 
-  // Cargar productos desde el carrito
   useEffect(() => {
     const savedCart = JSON.parse(localStorage.getItem("cartItems")) || [];
     setProductos(savedCart);
   }, []);
 
-  // Cargar direcciones desde el endpoint /api/users
   useEffect(() => {
     const fetchDirecciones = async () => {
       try {
@@ -33,14 +32,14 @@ function CheckoutFormPage() {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
-          } // Incluye el token si es necesario
+          }
         );
 
-        const user = response.data[0]; // Asegúrate de obtener el primer usuario
+        const user = response.data[0];
         if (user?.address) {
-          setDirecciones([{ ...user.address, name: user.name }]); // Agrega el nombre del usuario a la dirección
+          setDirecciones([{ ...user.address, name: user.name }]);
         } else {
-          setDirecciones([]); // No hay direcciones disponibles
+          setDirecciones([]);
         }
       } catch (error) {
         console.error("Error al cargar direcciones:", error);
@@ -49,6 +48,14 @@ function CheckoutFormPage() {
     };
 
     fetchDirecciones();
+  }, []);
+
+  useEffect(() => {
+    const session = JSON.parse(localStorage.getItem("user"));
+    console.log("Usuario:", session);
+    if (session) {
+      setUserSession(session);
+    }
   }, []);
 
   const calcularTotal = () => {
@@ -60,15 +67,72 @@ function CheckoutFormPage() {
       .toFixed(2);
   };
 
+  const formasPago = () => {
+    if (selectedEntrega === "domicilio") {
+      return [
+        { id: "tarjeta", label: "Tarjeta de débito o crédito", img: "/img/tarjeta-de-credito.png" },
+        { id: "mercado", label: "Mercado Pago", img: "/img/MercadoPago_Logotipo.jpg" },
+      ];
+    }
+    if (selectedEntrega === "tienda") {
+      return [
+        { id: "tarjeta", label: "Tarjeta de débito o crédito", img: "/img/tarjeta-de-credito.png" },
+        { id: "mercado", label: "Mercado Pago", img: "/img/MercadoPago_Logotipo.jpg" },
+        { id: "paypal", label: "PayPal", img: "/img/paypal.png" },
+        { id: "tienda", label: "Pagar en tienda", img: "/img/store-front.png" },
+      ];
+    }
+    return [];
+  };
+
+  const handleInputChange = (field, value) => {
+    setPaymentInfo((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
   const handleCompletePurchase = () => {
+    console.log("Selected Entrega:", selectedEntrega);
+    console.log("Selected Direccion:", selectedDireccion);
+    console.log("Selected Metodo Pago:", selectedMetodoPago);
+    console.log("Payment Info:", paymentInfo);
+    
+    console.log("User Session:", userSession);
+    
     if (!selectedEntrega || !selectedDireccion || !selectedMetodoPago) {
       toast.error("Por favor, completa todos los pasos antes de proceder.");
       return;
     }
-
-    toast.success("Compra completada exitosamente. Redirigiendo...", {
-      onClose: () => router.push("/completeOrden"),
-    });
+  
+    // Transformar los productos para incluir product_id, quantity y price
+    const productsToSend = productos.map(({ product_id, quantity, price }) => ({
+      product_id,
+      quantity,
+      price,
+    }));
+    console.log("Productos:", productsToSend);
+    console.log("user id:", userSession?.id);
+    
+    // Mandar a llamar el método para hacer la compra
+    axios
+      .post(`${process.env.NEXT_PUBLIC_API_URL}/api/salesProduct`, {
+        products: productsToSend,
+        paymentMethod: selectedMetodoPago,
+        deliveryMethod: selectedEntrega,
+        deliveryAddress: selectedDireccion,
+        user_id: userSession?.id,
+      })
+      .then((response) => {
+        console.log(response);
+        toast.success("Compra completada exitosamente. Redirigiendo...", {
+          onClose: () => router.push("/completeOrden"),
+        });
+      })
+      .catch((error) => {
+        console.error("Error al completar la compra:", error);
+        toast.error("Error al completar la compra. Intenta nuevamente.");
+      });
   };
 
   return (
@@ -85,6 +149,23 @@ function CheckoutFormPage() {
           {/* Paso 1: Formas de entrega */}
           <Box mb={4}>
             <Typography variant="h6" fontWeight="bold">
+              <Box
+                component="span"
+                sx={{
+                  display: "inline-flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  width: 30,
+                  height: 30,
+                  borderRadius: "50%",
+                  backgroundColor: "#568D2E",
+                  color: "white",
+                  fontWeight: "bold",
+                  mr: 1,
+                }}
+              >
+                1
+              </Box>
               Formas de entrega
             </Typography>
             <Divider sx={{ mt: 2, mb: 3 }} />
@@ -145,6 +226,23 @@ function CheckoutFormPage() {
           {/* Paso 2: Dirección de envío */}
           <Box mb={4}>
             <Typography variant="h6" fontWeight="bold">
+              <Box
+                component="span"
+                sx={{
+                  display: "inline-flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  width: 30,
+                  height: 30,
+                  borderRadius: "50%",
+                  backgroundColor: "#568D2E",
+                  color: "white",
+                  fontWeight: "bold",
+                  mr: 1,
+                }}
+              >
+                2
+              </Box>
               Dirección de envío
             </Typography>
             <Divider sx={{ mt: 2, mb: 3 }} />
@@ -153,12 +251,12 @@ function CheckoutFormPage() {
                 direcciones.map((direccion, index) => (
                   <Grid item xs={12} sm={6} key={index}>
                     <Card
-                      onClick={() => setSelectedDireccion(index)}
+                      onClick={() => setSelectedDireccion(direccion)}
                       sx={{
                         p: 2,
                         cursor: "pointer",
                         border:
-                          selectedDireccion === index
+                          selectedDireccion === direccion
                             ? "2px solid #568D2E"
                             : "2px solid #ccc",
                         borderRadius: "8px",
@@ -185,6 +283,124 @@ function CheckoutFormPage() {
               )}
             </Grid>
           </Box>
+
+          {/* Paso 3: Formas de pago */}
+          {selectedEntrega && (
+            <Box mb={4}>
+              <Typography variant="h6" fontWeight="bold">
+                <Box
+                  component="span"
+                  sx={{
+                    display: "inline-flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    width: 30,
+                    height: 30,
+                    borderRadius: "50%",
+                    backgroundColor: "#568D2E",
+                    color: "white",
+                    fontWeight: "bold",
+                    mr: 1,
+                  }}
+                >
+                  3
+                </Box>
+                Forma de pago
+              </Typography>
+              <Divider sx={{ mt: 2, mb: 3 }} />
+              <Grid container spacing={2}>
+                {formasPago().map((metodo) => (
+                  <Grid item xs={12} sm={6} key={metodo.id}>
+                    <Card
+                      onClick={() => setSelectedMetodoPago(metodo.id)}
+                      sx={{
+                        p: 2,
+                        textAlign: "center",
+                        cursor: "pointer",
+                        border:
+                          selectedMetodoPago === metodo.id
+                            ? "2px solid #568D2E"
+                            : "2px solid #ccc",
+                        borderRadius: "8px",
+                        "&:hover": { borderColor: "#568D2E" },
+                      }}
+                    >
+                      <img src={metodo.img} alt={metodo.label} width={60} />
+                      <Typography variant="body1" fontWeight="bold">
+                        {metodo.label}
+                      </Typography>
+                    </Card>
+                  </Grid>
+                ))}
+              </Grid>
+            </Box>
+          )}
+
+          {/* Paso 4: Información de pago */}
+          {selectedMetodoPago && (
+            <Box>
+              <Typography variant="h6" fontWeight="bold">
+                <Box
+                  component="span"
+                  sx={{
+                    display: "inline-flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    width: 30,
+                    height: 30,
+                    borderRadius: "50%",
+                    backgroundColor: "#568D2E",
+                    color: "white",
+                    fontWeight: "bold",
+                    mr: 1,
+                  }}
+                >
+                  4
+                </Box>
+                Información de pago
+              </Typography>
+              <Divider sx={{ mt: 2, mb: 3 }} />
+              {selectedMetodoPago === "tarjeta" && (
+                <Box>
+                  <TextField
+                    label="Número de tarjeta"
+                    fullWidth
+                    margin="normal"
+                    onChange={(e) => handleInputChange("cardInfo", { ...paymentInfo.cardInfo, number: e.target.value })}
+                  />
+                  <TextField
+                    label="Fecha de expiración (MM/AA)"
+                    fullWidth
+                    margin="normal"
+                    onChange={(e) => handleInputChange("cardInfo", { ...paymentInfo.cardInfo, expiry: e.target.value })}
+                  />
+                  <TextField
+                    label="Código de seguridad (CVV)"
+                    fullWidth
+                    margin="normal"
+                    onChange={(e) => handleInputChange("cardInfo", { ...paymentInfo.cardInfo, cvv: e.target.value })}
+                  />
+                </Box>
+              )}
+              {(selectedMetodoPago === "mercado" || selectedMetodoPago === "paypal") && (
+                <Box>
+                  <TextField
+                    label="Correo electrónico"
+                    fullWidth
+                    margin="normal"
+                    onChange={(e) => handleInputChange("email", e.target.value)}
+                  />
+                  <TextField
+                    label="Contraseña"
+                    type="password"
+                    fullWidth
+                    margin="normal"
+                    onChange={(e) => handleInputChange("password", e.target.value)}
+                  />
+                </Box>
+              )}
+            </Box>
+          )}
         </Box>
 
         {/* Resumen */}

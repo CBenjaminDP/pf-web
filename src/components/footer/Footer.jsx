@@ -57,7 +57,7 @@ const Footer = () => {
               fontFamily: "Poppins, sans-serif",
             }}
           >
-            Lorem ipsum dolor sit amet consectetur adipiscing elit aliquam.
+            La mejor Farmacia en línea de México
           </Typography>
           <Box sx={{ display: "flex", gap: "15px" }}>
             <IconButton>
