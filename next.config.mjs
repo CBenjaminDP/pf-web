@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    reactStrictMode: true, // Habilitar modo estricto para React
+    reactStrictMode: false, // Habilitar modo estricto para React
     webpack: (config, { dev }) => {
       if (dev) {
         // Silenciar mensajes de error en el entorno de desarrollo
