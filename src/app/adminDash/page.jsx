@@ -18,13 +18,15 @@ import {
   Campaign,
   Menu as MenuIcon,
   People as PeopleIcon,
+  Category as CategoryIcon, // Importa el icono de categorías
 } from "@mui/icons-material";
 import Image from "next/image";
 import Orders from "./Orders";
 import Products from "./Products";
 import Sells from "./Sells";
 import Promotions from "./Promotions";
-import Users from "./Users"; // Importar el componente de usuarios
+import Users from "./Users";
+import Categoria from "./Categories"; // Importa el componente de categorías
 import AuthGuard from "@/components/AuthGuard";
 
 const AdminDash = () => {
@@ -45,8 +47,12 @@ const AdminDash = () => {
     setSelectedScreen(screen);
   };
 
+  const handleNavigateHome = () => {
+    window.location.href = "/"; // Navegar a la página de inicio
+  };
+
   return (
-    <AuthGuard requiredRoles={["gerente", "empleado",]}>
+    <AuthGuard requiredRoles={["gerente", "empleado"]}>
       <Box sx={{ display: "flex", minHeight: "100vh", backgroundColor: "#F2F4F7" }}>
         {/* Menú lateral */}
         <Drawer
@@ -69,7 +75,9 @@ const AdminDash = () => {
               padding: "20px",
               display: "flex",
               alignItems: "center",
+              cursor: "pointer", // Añadir cursor pointer para indicar que es clicable
             }}
+            onClick={handleNavigateHome} // Añadir el evento onClick
           >
             <Image
               src="/images/Logo.png"
@@ -144,6 +152,19 @@ const AdminDash = () => {
                 {drawerOpen && <ListItemText primary="Promociones" />}
               </ListItem>
             )}
+            {/* Nueva opción para Categorías */}
+            {userRoles.includes("gerente") && (
+              <ListItem button onClick={() => handleScreenChange("categories")}>
+                <ListItemIcon>
+                  <CategoryIcon
+                    sx={{
+                      color: selectedScreen === "categories" ? "#7CC448" : "#B1B1B1",
+                    }}
+                  />
+                </ListItemIcon>
+                {drawerOpen && <ListItemText primary="Categorías" />}
+              </ListItem>
+            )}
             {/* Nueva opción para Usuarios */}
             {userRoles.includes("empleado") && (
               <ListItem button onClick={() => handleScreenChange("users")}>
@@ -191,6 +212,8 @@ const AdminDash = () => {
                 ? "Órdenes"
                 : selectedScreen === "promotions"
                 ? "Promociones"
+                : selectedScreen === "categories"
+                ? "Categorías"
                 : "Usuarios"}
             </Typography>
           </Box>
@@ -199,6 +222,7 @@ const AdminDash = () => {
             {selectedScreen === "products" && userRoles.includes("empleado") && <Products />}
             {selectedScreen === "orders" && userRoles.includes("gerente") && <Orders />}
             {selectedScreen === "promotions" && userRoles.includes("gerente") && <Promotions />}
+            {selectedScreen === "categories" && userRoles.includes("gerente") && <Categoria />}
             {selectedScreen === "users" && userRoles.includes("empleado") && <Users />}
           </Container>
         </Box>

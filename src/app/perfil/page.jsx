@@ -11,69 +11,62 @@ import {
   Button,
   Divider,
 } from "@mui/material";
-import { GlobalStyles } from "@mui/material";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import AuthGuard from "@/components/AuthGuard";
+import OrderDetails from "./OrderDetails"; // Importamos el componente OrderDetails
 
 function PerfilPage() {
-  const [direcciones, setDirecciones] = useState([]);
-  const [pedido, setPedido] = useState([]);
+  const [user, setUser] = useState(null);
+  const [pedidos, setPedidos] = useState([]);
   const [error, setError] = useState(null);
+  const [selectedPedido, setSelectedPedido] = useState(null); // Nuevo estado para manejar el pedido seleccionado
 
   useEffect(() => {
-    const fetchDirecciones = async () => {
-      const mockDirecciones = [
-        {
-          idUser: 1,
-          name: "Josua Quevedo",
-          calle: "Benito Juarez",
-          colonia: "Emiliano Zapata",
-          cp: "62767",
-          estado: "Morelos",
-          pais: "México",
-          telefono: "7777777777",
-          referencia: "62 Emiliano Zapata Ampliación Amatitlán ",
-        },
-        {
-          idUser: 2,
-          name: "Aldair Vargas",
-          calle: "Benito Juarez",
-          colonia: "Emiliano Zapata",
-          cp: "62767",
-          estado: "Morelos",
-          pais: "México",
-          telefono: "7777777777",
-          referencia: "62 Emilano Zapata Ampliación Amatitlán ",
-        },
-      ];
-      setDirecciones(mockDirecciones);
-    };
+    // Obtener usuario del localStorage
+    const session = JSON.parse(localStorage.getItem("user"));
+    setUser(session);
+    console.log("Usuario:", session);
+  }, []);
 
-    const fetchPedido = async () => {
+  useEffect(() => {
+    const fetchPedidos = async () => {
+      if (!user) return; // Esperar a que el usuario esté cargado
       try {
-        const response = await fetch("http://localhost:3001/api/sales"); // Ajusta según tu backend
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/salesProduct/${user.id}`
+        );
         if (!response.ok) throw new Error("Error al obtener los pedidos");
+
         const data = await response.json();
-        const pedidosAdaptados = data.map((pedido) => ({
-          id: pedido.id,
-          orden: `Orden No. ${pedido.id}`,
-          fecha: pedido.fecha, // Ajusta según los datos del backend
-          estado: pedido.estado,
-          total: `$${pedido.total}`,
-          img: pedido.img || "https://via.placeholder.com/150", // Imagen por defecto
+        console.log("Pedidos obtenidos:", data);
+
+        // Adaptar la estructura de los pedidos
+        const pedidosAdaptados = data.sales.map((sale) => ({
+          id: sale.sale_id,
+          orden: `Orden No. ${sale.sale_number}`,
+          fecha: new Date(sale.created_at).toLocaleDateString("es-ES"),
+          estado: sale.status,
+          total: `$${sale.total_amount}`,
+          productos: sale.products,
+          direccion: sale.deliveryAddress,
+          metodoPago: sale.paymentMethod,
         }));
-        setPedido(pedidosAdaptados);
+
+        setPedidos(pedidosAdaptados);
       } catch (error) {
         setError("Error al cargar los pedidos.");
         console.error("Error al obtener los pedidos:", error);
       }
     };
 
-    fetchDirecciones();
-    fetchPedido();
-  }, []);
+    fetchPedidos();
+  }, [user]);
+
+  const handleOrderDetails = (pedido) => {
+    setSelectedPedido(pedido); // Actualizamos el estado con el pedido seleccionado
+  };
 
   const handleLogout = () => {
     localStorage.removeItem("user");
@@ -84,17 +77,13 @@ function PerfilPage() {
   };
 
   return (
-    <>
-      <AuthGuard>
-        <ToastContainer />
-        <GlobalStyles styles={{ body: { margin: 0, padding: 0 } }} />
+    <AuthGuard>
+      <ToastContainer />
+      {!selectedPedido ? (
         <Box sx={{ padding: 2, display: "flex", width: "100%" }}>
+          {/* Sección izquierda: Datos personales */}
           <Box sx={{ width: { xs: "100%", md: "60%" } }}>
-            <Grid
-              container
-              spacing={4}
-              sx={{ display: "flex", flexDirection: "column" }}
-            >
+            <Grid container spacing={4} sx={{ flexDirection: "column" }}>
               <Grid item xs={12} md={10}>
                 <Typography variant="h4" sx={{ fontWeight: "bold", mb: 2 }}>
                   Mi cuenta
@@ -103,15 +92,7 @@ function PerfilPage() {
                 <Typography variant="h6" sx={{ fontWeight: "bold" }}>
                   Datos personales
                 </Typography>
-                <Box
-                  component="form"
-                  sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    flexDirection: "column",
-                  }}
-                >
+                <Box component="form" sx={{ flexDirection: "column" }}>
                   <Box
                     sx={{
                       display: "flex",
@@ -120,18 +101,12 @@ function PerfilPage() {
                     }}
                   >
                     <TextField
-                      sx={{ width: "250px" }}
-                      label="Nombre"
-                      defaultValue="Joshua"
+                      sx={{ width: "520px" }}
+                      label="Nombre completo"
+                      value={user?.name || ""} // Cambiado de defaultValue a value
                       variant="outlined"
                       margin="normal"
-                    />
-                    <TextField
-                      sx={{ width: "250px" }}
-                      label="Apellidos"
-                      defaultValue="Quevedo Sánchez"
-                      variant="outlined"
-                      margin="normal"
+                      InputLabelProps={{ shrink: true }} // Asegura que el label se mantenga arriba
                     />
                   </Box>
                   <Box
@@ -144,69 +119,55 @@ function PerfilPage() {
                     <TextField
                       sx={{ width: "250px" }}
                       label="Correo"
-                      defaultValue="joshq22@gmail.com"
+                      value={user?.email || ""} // Cambiado de defaultValue a value
                       variant="outlined"
                       margin="normal"
+                      InputLabelProps={{ shrink: true }} // Asegura que el label se mantenga arriba
                     />
                     <TextField
                       sx={{ width: "250px" }}
                       label="Número telefónico"
-                      defaultValue="777-175-9880"
+                      value={user?.phone || ""} // Cambiado de defaultValue a value
                       variant="outlined"
                       margin="normal"
+                      InputLabelProps={{ shrink: true }} // Asegura que el label se mantenga arriba
                     />
                   </Box>
-                  <Button
-                    variant="contained"
-                    sx={{
-                      mt: 2,
-                      backgroundColor: "#568D2E",
-                      color: "white",
-                      width: "350px",
-                    }}
-                  >
-                    Editar
-                  </Button>
                 </Box>
               </Grid>
               <Grid item xs={12} md={10}>
                 <Typography variant="h6" sx={{ fontWeight: "bold" }}>
-                  Direcciones de envío
+                  Dirección de envío
                 </Typography>
                 <Divider sx={{ my: 2 }} />
-                <Box sx={{ display: "flex", justifyContent: "space-evenly" }}>
-                  {direcciones.map((direccion) => (
-                    <Card
-                      key={direccion.idUser}
-                      sx={{
-                        border: "1px solid #000",
-                        borderRadius: 2,
-                        marginBottom: 2,
-                        padding: 2,
-                        width: "250px",
-                        height: "200px",
-                      }}
-                    >
-                      <CardContent>
-                        <Typography variant="body1" fontWeight="bold">
-                          {direccion.name}
-                        </Typography>
-                        <Typography>{direccion.calle}</Typography>
-                        <Typography>
-                          {direccion.colonia}, {direccion.estado} {direccion.cp}{" "}
-                          {direccion.pais}
-                        </Typography>
-                        <Typography sx={{ color: "#568D2E" }}>
-                          {direccion.telefono}
-                        </Typography>
-                        <Typography>{direccion.referencia}</Typography>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </Box>
+                {user?.address && (
+                  <Card
+                    sx={{
+                      border: "1px solid #000",
+                      borderRadius: 2,
+                      marginBottom: 2,
+                      padding: 2,
+                      width: "100%",
+                    }}
+                  >
+                    <CardContent>
+                      <Typography variant="body1" fontWeight="bold">
+                        Dirección:
+                      </Typography>
+                      <Typography>{user.address.street}</Typography>
+                      <Typography>
+                        {user.address.city}, {user.address.state},{" "}
+                        {user.address.zip_code}
+                      </Typography>
+                      <Typography>{user.address.country}</Typography>
+                    </CardContent>
+                  </Card>
+                )}
               </Grid>
             </Grid>
           </Box>
+
+          {/* Sección derecha: Pedidos */}
           <Box sx={{ width: { xs: "100%", md: "40%" } }}>
             <Grid>
               <Typography variant="h4" sx={{ fontWeight: "bold", mb: 2 }}>
@@ -214,22 +175,28 @@ function PerfilPage() {
               </Typography>
               <Divider sx={{ my: 2 }} />
               {error && <Typography color="error">{error}</Typography>}
-              <Card sx={{ width: "100%", backgroundColor: "#F4F4F4" }}>
-                {pedido.map((pedido) => (
+              {pedidos.map((pedido) => (
+                <Card key={pedido.id} sx={{ marginBottom: 2, p: 2 }}>
                   <CardContent
                     sx={{ display: "flex", justifyContent: "space-evenly" }}
-                    key={pedido.id}
                   >
                     <Box sx={{ width: "120px" }}>
-                      <img src={pedido.img} alt="Imagen del producto" width={100} />
+                      <img
+                        src="/img/logistica.png" // Ruta de la imagen estática
+                        alt="Imagen del producto"
+                        width={100}
+                      />
                     </Box>
                     <Box sx={{ width: "300px" }}>
                       <Typography variant="body1" fontWeight="bold">
                         {pedido.orden}
                       </Typography>
-                      <Typography>Pedido el: {pedido.fecha}</Typography>
+                      <Typography>Fecha: {pedido.fecha}</Typography>
                       <Typography>
-                        Estado: <b style={{ color: "#568D2E" }}>{pedido.estado}</b>
+                        Estado:{" "}
+                        <span style={{ color: "#568D2E" }}>
+                          {pedido.estado}
+                        </span>
                       </Typography>
                       <Typography>Total: {pedido.total}</Typography>
                     </Box>
@@ -243,31 +210,36 @@ function PerfilPage() {
                         borderRadius: "50%",
                         transform: "scale(0.5)",
                       }}
+                      onClick={() => handleOrderDetails(pedido)} // Mostramos el detalle
                     >
                       <ArrowForwardIosIcon sx={{ transform: "scale(1.5)" }} />
                     </Button>
                   </CardContent>
-                ))}
-              </Card>
+                </Card>
+              ))}
             </Grid>
           </Box>
         </Box>
-        <Box sx={{ display: "flex", justifyContent: "center", mt: 5 }}>
-          <Button
-            variant="contained"
-            sx={{
-              backgroundColor: "#d32f2f",
-              color: "white",
-              fontWeight: "bold",
-              width: "200px",
-            }}
-            onClick={handleLogout}
-          >
-            Cerrar sesión
-          </Button>
-        </Box>
-      </AuthGuard>
-    </>
+      ) : (
+        <OrderDetails order={selectedPedido} /> // Renderizamos el componente de detalles
+      )}
+
+      {/* Botón de cerrar sesión */}
+      <Box sx={{ display: "flex", justifyContent: "center", mt: 5 }}>
+        <Button
+          variant="contained"
+          sx={{
+            backgroundColor: "#d32f2f",
+            color: "white",
+            fontWeight: "bold",
+            width: "200px",
+          }}
+          onClick={handleLogout}
+        >
+          Cerrar sesión
+        </Button>
+      </Box>
+    </AuthGuard>
   );
 }
 

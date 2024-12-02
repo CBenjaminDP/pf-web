@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -99,7 +99,13 @@ const LoginForm = () => {
                 marginBottom: "20px",
               }}
             >
-              <Box sx={{ display: "flex", alignItems: "center", whiteSpace: "nowrap" }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  whiteSpace: "nowrap",
+                }}
+              >
                 <Image
                   src="/images/Logo.png"
                   alt="Farmacias Saludables"
@@ -129,7 +135,7 @@ const LoginForm = () => {
                 }}
               >
                 <Link
-                  href="#"
+                  href="/register" // Cambia el href a "/register"
                   underline="none"
                   sx={{
                     fontSize: "11px",
@@ -207,17 +213,6 @@ const LoginForm = () => {
                   justifyContent: "flex-end",
                 }}
               >
-                <Link
-                  href="#"
-                  underline="hover"
-                  sx={{
-                    fontSize: "12px",
-                    color: "#4285F4",
-                    fontFamily: "Poppins, sans-serif",
-                  }}
-                >
-                  Olvidé mi contraseña
-                </Link>
               </Box>
               <Button
                 type="submit"

@@ -65,7 +65,6 @@ const Products = () => {
 
   // Maneja la creación de un nuevo producto
   const handleCreateProduct = () => {
-    setProductos([...productos, newProduct]);
     const object = {
       name: newProduct.nombre,
       description: newProduct.description,
@@ -75,33 +74,28 @@ const Products = () => {
       price: parseFloat(newProduct.precio.replace("$", "")),
       promotion_id: newProduct.promocion,
     };
-
-    console.log(object);
-
-    // Creación de un nuevo producto
+  
     axios
       .post(`${process.env.NEXT_PUBLIC_API_URL}/api/products`, object)
       .then((response) => {
         console.log(response);
         if (response.status === 201) {
           toast.success("Producto creado exitosamente!");
+          // actualiza la data de productos
+          axios
+            .get(`${process.env.NEXT_PUBLIC_API_URL}/api/products`)
+            .then((response) => {
+              console.log(response.data);
+              setProductos(response.data); // Asegúrate de que los datos vienen en el formato esperado
+            })
+            .catch((error) => console.error(error));
         }
       })
       .catch((error) => {
         console.error(error);
         toast.error("Error al crear el producto.");
       });
-
-    // actualiza la data de productos
-    axios
-      .get(`${process.env.NEXT_PUBLIC_API_URL}/api/products`)
-      .then((response) => {
-        console.log(response.data);
-
-        setProductos(response.data); // Asegúrate de que los datos vienen en el formato esperado
-      })
-      .catch((error) => console.error(error));
-
+  
     setNewProduct({
       nombre: "",
       id: "",

@@ -49,7 +49,6 @@ const Users = () => {
       .then((response) => setUsers(response.data))
       .catch((error) => console.error(error));
   };
-  
 
   // Fetch users from API
   useEffect(() => {
@@ -253,97 +252,101 @@ const Users = () => {
             borderRadius: "10px",
             boxShadow: 3,
             width: "400px",
+            maxHeight: "80vh",
+            overflowY: "auto",
           }}
         >
           <Typography variant="h6" sx={{ marginBottom: "20px" }}>
             Crear Usuario
           </Typography>
-          <TextField
-            label="Nombre"
-            fullWidth
-            margin="normal"
-            name="name"
-            value={newUser.name}
-            onChange={handleNewUserChange}
-          />
-          <TextField
-            label="Correo Electrónico"
-            fullWidth
-            margin="normal"
-            name="email"
-            value={newUser.email}
-            onChange={handleNewUserChange}
-          />
-          <TextField
-            label="Contraseña"
-            type="password"
-            fullWidth
-            margin="normal"
-            name="password"
-            value={newUser.password}
-            onChange={handleNewUserChange}
-          />
-          <FormControl fullWidth margin="normal">
-            <InputLabel>Roles</InputLabel>
-            <Select
-              multiple
-              name="role"
-              value={newUser.role}
+          <Box sx={{ maxHeight: "60vh", overflowY: "auto" }}>
+            <TextField
+              label="Nombre"
+              fullWidth
+              margin="normal"
+              name="name"
+              value={newUser.name}
               onChange={handleNewUserChange}
-            >
-              <MenuItem value="cliente">Cliente</MenuItem>
-              <MenuItem value="empleado">Empleado</MenuItem>
-              <MenuItem value="gerente">Gerente</MenuItem>
-            </Select>
-          </FormControl>
-          <TextField
-            label="Teléfono"
-            fullWidth
-            margin="normal"
-            name="phone"
-            value={newUser.phone}
-            onChange={handleNewUserChange}
-          />
-          <TextField
-            label="Calle"
-            fullWidth
-            margin="normal"
-            name="address.street"
-            value={newUser.address.street}
-            onChange={handleNewUserChange}
-          />
-          <TextField
-            label="Ciudad"
-            fullWidth
-            margin="normal"
-            name="address.city"
-            value={newUser.address.city}
-            onChange={handleNewUserChange}
-          />
-          <TextField
-            label="Estado"
-            fullWidth
-            margin="normal"
-            name="address.state"
-            value={newUser.address.state}
-            onChange={handleNewUserChange}
-          />
-          <TextField
-            label="Código Postal"
-            fullWidth
-            margin="normal"
-            name="address.zip_code"
-            value={newUser.address.zip_code}
-            onChange={handleNewUserChange}
-          />
-          <TextField
-            label="País"
-            fullWidth
-            margin="normal"
-            name="address.country"
-            value={newUser.address.country}
-            onChange={handleNewUserChange}
-          />
+            />
+            <TextField
+              label="Correo Electrónico"
+              fullWidth
+              margin="normal"
+              name="email"
+              value={newUser.email}
+              onChange={handleNewUserChange}
+            />
+            <TextField
+              label="Contraseña"
+              type="password"
+              fullWidth
+              margin="normal"
+              name="password"
+              value={newUser.password}
+              onChange={handleNewUserChange}
+            />
+            <FormControl fullWidth margin="normal">
+              <InputLabel>Roles</InputLabel>
+              <Select
+                multiple
+                name="role"
+                value={newUser.role}
+                onChange={handleNewUserChange}
+              >
+                <MenuItem value="cliente">Cliente</MenuItem>
+                <MenuItem value="empleado">Empleado</MenuItem>
+                <MenuItem value="gerente">Gerente</MenuItem>
+              </Select>
+            </FormControl>
+            <TextField
+              label="Teléfono"
+              fullWidth
+              margin="normal"
+              name="phone"
+              value={newUser.phone}
+              onChange={handleNewUserChange}
+            />
+            <TextField
+              label="Calle"
+              fullWidth
+              margin="normal"
+              name="address.street"
+              value={newUser.address.street}
+              onChange={handleNewUserChange}
+            />
+            <TextField
+              label="Ciudad"
+              fullWidth
+              margin="normal"
+              name="address.city"
+              value={newUser.address.city}
+              onChange={handleNewUserChange}
+            />
+            <TextField
+              label="Estado"
+              fullWidth
+              margin="normal"
+              name="address.state"
+              value={newUser.address.state}
+              onChange={handleNewUserChange}
+            />
+            <TextField
+              label="Código Postal"
+              fullWidth
+              margin="normal"
+              name="address.zip_code"
+              value={newUser.address.zip_code}
+              onChange={handleNewUserChange}
+            />
+            <TextField
+              label="País"
+              fullWidth
+              margin="normal"
+              name="address.country"
+              value={newUser.address.country}
+              onChange={handleNewUserChange}
+            />
+          </Box>
           <Button
             variant="contained"
             color="primary"
@@ -372,88 +375,92 @@ const Users = () => {
             borderRadius: "10px",
             boxShadow: 3,
             width: "400px",
+            maxHeight: "80vh",
+            overflowY: "auto",
           }}
         >
           <Typography variant="h6" sx={{ marginBottom: "20px" }}>
             Editar Usuario
           </Typography>
-          <TextField
-            label="Nombre"
-            fullWidth
-            margin="normal"
-            name="name"
-            value={editUser?.name || ""}
-            onChange={handleEditUserChange}
-          />
-          <TextField
-            label="Correo Electrónico"
-            fullWidth
-            margin="normal"
-            name="email"
-            value={editUser?.email || ""}
-            onChange={handleEditUserChange}
-          />
-          <FormControl fullWidth margin="normal">
-            <InputLabel>Roles</InputLabel>
-            <Select
-              multiple
-              name="role"
-              value={editUser?.role || []}
+          <Box sx={{ maxHeight: "60vh", overflowY: "auto" }}>
+            <TextField
+              label="Nombre"
+              fullWidth
+              margin="normal"
+              name="name"
+              value={editUser?.name || ""}
               onChange={handleEditUserChange}
-            >
-              <MenuItem value="cliente">Cliente</MenuItem>
-              <MenuItem value="empleado">Empleado</MenuItem>
-              <MenuItem value="gerente">Gerente</MenuItem>
-            </Select>
-          </FormControl>
-          <TextField
-            label="Teléfono"
-            fullWidth
-            margin="normal"
-            name="phone"
-            value={editUser?.phone || ""}
-            onChange={handleEditUserChange}
-          />
-          <TextField
-            label="Calle"
-            fullWidth
-            margin="normal"
-            name="address.street"
-            value={editUser?.address?.street || ""}
-            onChange={handleEditUserChange}
-          />
-          <TextField
-            label="Ciudad"
-            fullWidth
-            margin="normal"
-            name="address.city"
-            value={editUser?.address?.city || ""}
-            onChange={handleEditUserChange}
-          />
-          <TextField
-            label="Estado"
-            fullWidth
-            margin="normal"
-            name="address.state"
-            value={editUser?.address?.state || ""}
-            onChange={handleEditUserChange}
-          />
-          <TextField
-            label="Código Postal"
-            fullWidth
-            margin="normal"
-            name="address.zip_code"
-            value={editUser?.address?.zip_code || ""}
-            onChange={handleEditUserChange}
-          />
-          <TextField
-            label="País"
-            fullWidth
-            margin="normal"
-            name="address.country"
-            value={editUser?.address?.country || ""}
-            onChange={handleEditUserChange}
-          />
+            />
+            <TextField
+              label="Correo Electrónico"
+              fullWidth
+              margin="normal"
+              name="email"
+              value={editUser?.email || ""}
+              onChange={handleEditUserChange}
+            />
+            <FormControl fullWidth margin="normal">
+              <InputLabel>Roles</InputLabel>
+              <Select
+                multiple
+                name="role"
+                value={editUser?.role || []}
+                onChange={handleEditUserChange}
+              >
+                <MenuItem value="cliente">Cliente</MenuItem>
+                <MenuItem value="empleado">Empleado</MenuItem>
+                <MenuItem value="gerente">Gerente</MenuItem>
+              </Select>
+            </FormControl>
+            <TextField
+              label="Teléfono"
+              fullWidth
+              margin="normal"
+              name="phone"
+              value={editUser?.phone || ""}
+              onChange={handleEditUserChange}
+            />
+            <TextField
+              label="Calle"
+              fullWidth
+              margin="normal"
+              name="address.street"
+              value={editUser?.address?.street || ""}
+              onChange={handleEditUserChange}
+            />
+            <TextField
+              label="Ciudad"
+              fullWidth
+              margin="normal"
+              name="address.city"
+              value={editUser?.address?.city || ""}
+              onChange={handleEditUserChange}
+            />
+            <TextField
+              label="Estado"
+              fullWidth
+              margin="normal"
+              name="address.state"
+              value={editUser?.address?.state || ""}
+              onChange={handleEditUserChange}
+            />
+            <TextField
+              label="Código Postal"
+              fullWidth
+              margin="normal"
+              name="address.zip_code"
+              value={editUser?.address?.zip_code || ""}
+              onChange={handleEditUserChange}
+            />
+            <TextField
+              label="País"
+              fullWidth
+              margin="normal"
+              name="address.country"
+              value={editUser?.address?.country || ""}
+              onChange={handleEditUserChange}
+            />
+          </Box>
           <Button
             variant="contained"
             color="primary"

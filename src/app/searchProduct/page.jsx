@@ -12,128 +12,103 @@ import {
   CardActions,
   Button,
   IconButton,
-  TextField,
-  FormControl,
-  Select,
-  MenuItem,
-  InputLabel,
 } from "@mui/material";
 import LockIcon from "@mui/icons-material/Lock";
 import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
+import axios from "axios";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useCart } from "@/context/CartContext";
 
 const SearchProduct = () => {
   const searchParams = useSearchParams();
-  const query = searchParams.get("query"); // Obtén el término de búsqueda desde la URL
-  const router = useRouter(); // Inicializa el router para manejar la navegación
+  const query = searchParams.get("query");
+  const router = useRouter();
+  const { addToCart } = useCart(); // Importamos el contexto del carrito
 
-  const [selectedCategory, setSelectedCategory] = useState("");
-  const [priceRange, setPriceRange] = useState({ min: 100, max: 2500 });
-  const [currentPage, setCurrentPage] = useState(1);
   const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [session, setSession] = useState(null);
 
-  // Simula la carga de productos basada en el término de búsqueda
+  // Verificar la sesión del usuario
   useEffect(() => {
-    if (query) {
-      // Simulación de productos relacionados con la búsqueda
-      const searchResults = Array.from({ length: 12 }, (_, index) => ({
-        id: index + 1,
-        name: `${query} Producto ${index + 1}`,
-        price: `$${(index + 1) * 10}.00`,
-        image: "https://via.placeholder.com/150",
-      }));
-      setProducts(searchResults);
-    }
+    const userSession = localStorage.getItem("user");
+    setSession(userSession ? JSON.parse(userSession) : null);
+  }, []);
+
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const userSession = localStorage.getItem("user");
+      setSession(userSession ? JSON.parse(userSession) : null);
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
+
+  // Realiza la búsqueda de productos al cargar el componente o cuando cambie el query
+  useEffect(() => {
+    const fetchProducts = async () => {
+      if (!query) return;
+
+      setLoading(true);
+      setError(null);
+
+      try {
+        const response = await axios.post(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/products/search`,
+          { query }
+        );
+
+        setProducts(response.data);
+      } catch (err) {
+        if (err.response && err.response.status === 404) {
+          setError("No se encontraron productos");
+        } else {
+          setError("Ocurrió un error al buscar los productos.");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
   }, [query]);
-
-  const handleCategoryChange = (event) => {
-    setSelectedCategory(event.target.value);
-  };
-
-  const handlePriceChange = (event) => {
-    const { name, value } = event.target;
-    setPriceRange({ ...priceRange, [name]: value });
-  };
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
+    // Lógica adicional si la paginación está implementada en el backend
   };
 
-  const handleAddToCart = () => {
-    // Redirige al login si intentan agregar un producto al carrito
-    router.push("/login");
+  const handleAddToCart = (product) => {
+    if (!session) {
+      router.push("/login");
+    } else {
+      console.log(`Producto agregado al carrito: ${product.name}`);
+      addToCart(product); // Agregar producto al carrito
+    }
   };
 
   return (
     <Container maxWidth="xl" sx={{ mt: 5 }}>
-      <Box display="flex">
-        {/* Barra lateral de filtros */}
-        <Box
-          sx={{
-            width: "250px",
-            backgroundColor: "#f5f5f5",
-            borderRadius: "8px",
-            padding: 2,
-            boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)",
-          }}
-        >
-          <Typography variant="h6" sx={{ fontWeight: "bold", mb: 2 }}>
-            Filtros
-          </Typography>
-          <Box sx={{ mb: 3 }}>
-            <Typography variant="subtitle1" sx={{ fontWeight: "bold", mb: 1 }}>
-              Categorías:
-            </Typography>
-            <FormControl fullWidth>
-              <InputLabel>Categorías</InputLabel>
-              <Select
-                value={selectedCategory}
-                onChange={handleCategoryChange}
-                displayEmpty
-              >
-                <MenuItem value="">Todas</MenuItem>
-                <MenuItem value="Nutrición">Nutrición</MenuItem>
-                <MenuItem value="Dermatología">Dermatología</MenuItem>
-                <MenuItem value="Diabetes">Diabetes</MenuItem>
-                <MenuItem value="Bebés">Bebés</MenuItem>
-              </Select>
-            </FormControl>
-          </Box>
-          <Box>
-            <Typography variant="subtitle1" sx={{ fontWeight: "bold", mb: 1 }}>
-              Precio:
-            </Typography>
-            <Box display="flex" gap={2}>
-              <TextField
-                label="Min"
-                type="number"
-                name="min"
-                value={priceRange.min}
-                onChange={handlePriceChange}
-                size="small"
-              />
-              <TextField
-                label="Max"
-                type="number"
-                name="max"
-                value={priceRange.max}
-                onChange={handlePriceChange}
-                size="small"
-              />
-            </Box>
-          </Box>
-        </Box>
+      <Box display="flex" flexDirection="column" alignItems="center">
+        <Typography variant="h5" sx={{ fontWeight: "bold", mb: 3 }}>
+          {`Resultados de la búsqueda: "${query || "Todos"}"`}
+        </Typography>
 
-        {/* Resultados de la búsqueda */}
-        <Box flex={1} ml={3}>
-          <Typography
-            variant="h5"
-            sx={{ fontWeight: "bold", mb: 3 }}
-          >{`Resultados de la búsqueda: "${query}"`}</Typography>
+        {/* Mostrar estado de carga, error o productos */}
+        {loading ? (
+          <Typography>Cargando productos...</Typography>
+        ) : error ? (
+          <Typography color="error" sx={{ mt: 2 }}>
+            {error}
+          </Typography>
+        ) : (
           <Grid container spacing={3}>
             {products.map((product) => (
-              <Grid item xs={12} sm={6} md={4} lg={3} key={product.id}>
+              <Grid item xs={12} sm={6} md={4} lg={3} key={product.product_id}>
                 <Card
                   sx={{
                     border: "1px solid #7CC448",
@@ -160,14 +135,14 @@ const SearchProduct = () => {
                       variant="h6"
                       sx={{ fontWeight: "bold", color: "#2C742F" }}
                     >
-                      {product.price}
+                      ${product.price.toFixed(2)}
                     </Typography>
                   </CardContent>
                   <CardActions sx={{ justifyContent: "center" }}>
                     <Button
                       variant="contained"
                       startIcon={<LockIcon />}
-                      onClick={handleAddToCart} // Redirige al login al hacer clic
+                      onClick={() => handleAddToCart(product)}
                       sx={{
                         backgroundColor: "#7CC448",
                         color: "#fff",
@@ -182,8 +157,10 @@ const SearchProduct = () => {
               </Grid>
             ))}
           </Grid>
+        )}
 
-          {/* Paginación */}
+        {/* Paginación */}
+        {!loading && !error && (
           <Box display="flex" justifyContent="center" mt={3}>
             <IconButton
               disabled={currentPage === 1}
@@ -214,7 +191,7 @@ const SearchProduct = () => {
               <NavigateNextIcon />
             </IconButton>
           </Box>
-        </Box>
+        )}
       </Box>
     </Container>
   );
