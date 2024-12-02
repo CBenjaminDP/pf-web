@@ -3,10 +3,10 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import "@fontsource/poppins";
-import "bootstrap-icons/font/bootstrap-icons.css"; // Importa Bootstrap Icons
+import "bootstrap-icons/font/bootstrap-icons.css";
 import { AppBar, Box, Toolbar, Typography, IconButton, InputBase } from "@mui/material";
 import Image from "next/image";
-import CartDrawer from "../cart/Cart"; // Asegúrate de importar el componente del carrito correctamente
+import CartDrawer from "../cart/Cart";
 
 const Navbar = () => {
   const router = useRouter();
@@ -50,7 +50,8 @@ const Navbar = () => {
 
   const handleSearch = () => {
     if (searchTerm.trim() !== "") {
-      router.push(`/searchProduct?query=${encodeURIComponent(searchTerm)}`); // Redirige a la página de búsqueda
+      // Aquí enviamos el término de búsqueda al backend
+      router.push(`/searchProduct?query=${encodeURIComponent(searchTerm)}`);
     }
   };
 
@@ -155,7 +156,7 @@ const Navbar = () => {
             }}
           >
             <InputBase
-              placeholder="Busca algún producto..."
+              placeholder="Busca por producto o categoría..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)} // Actualiza el término de búsqueda
               sx={{
