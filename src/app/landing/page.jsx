@@ -180,7 +180,7 @@ function Landing() {
                       component="img"
                       height="120"
                       image={
-                        product.image.startsWith("data:image/")
+                        typeof product.image === "string" && product.image.startsWith("data:image/")
                           ? product.image
                           : `data:image/jpeg;base64,${product.image}`
                       }
