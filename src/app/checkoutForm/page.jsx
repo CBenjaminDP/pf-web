@@ -72,6 +72,7 @@ function CheckoutFormPage() {
       return [
         { id: "tarjeta", label: "Tarjeta de débito o crédito", img: "/img/tarjeta-de-credito.png" },
         { id: "mercado", label: "Mercado Pago", img: "/img/MercadoPago_Logotipo.jpg" },
+        { id: "paypal", label: "PayPal", img: "/img/paypal.png" },
       ];
     }
     if (selectedEntrega === "tienda") {
@@ -100,7 +101,7 @@ function CheckoutFormPage() {
     
     console.log("User Session:", userSession);
     
-    if (!selectedEntrega || !selectedDireccion || !selectedMetodoPago) {
+    if (!selectedEntrega || !selectedMetodoPago || (selectedEntrega === "domicilio" && !selectedDireccion)) {
       toast.error("Por favor, completa todos los pasos antes de proceder.");
       return;
     }
@@ -224,65 +225,67 @@ function CheckoutFormPage() {
           </Box>
 
           {/* Paso 2: Dirección de envío */}
-          <Box mb={4}>
-            <Typography variant="h6" fontWeight="bold">
-              <Box
-                component="span"
-                sx={{
-                  display: "inline-flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  width: 30,
-                  height: 30,
-                  borderRadius: "50%",
-                  backgroundColor: "#568D2E",
-                  color: "white",
-                  fontWeight: "bold",
-                  mr: 1,
-                }}
-              >
-                2
-              </Box>
-              Dirección de envío
-            </Typography>
-            <Divider sx={{ mt: 2, mb: 3 }} />
-            <Grid container spacing={2}>
-              {direcciones.length > 0 ? (
-                direcciones.map((direccion, index) => (
-                  <Grid item xs={12} sm={6} key={index}>
-                    <Card
-                      onClick={() => setSelectedDireccion(direccion)}
-                      sx={{
-                        p: 2,
-                        cursor: "pointer",
-                        border:
-                          selectedDireccion === direccion
-                            ? "2px solid #568D2E"
-                            : "2px solid #ccc",
-                        borderRadius: "8px",
-                        "&:hover": { borderColor: "#568D2E" },
-                      }}
-                    >
-                      <Typography variant="body1" fontWeight="bold">
-                        {direccion.name}
-                      </Typography>
-                      <Typography>
-                        {direccion.street}, {direccion.city}
-                      </Typography>
-                      <Typography>
-                        {direccion.state}, {direccion.country},{" "}
-                        {direccion.zip_code}
-                      </Typography>
-                    </Card>
-                  </Grid>
-                ))
-              ) : (
-                <Typography>
-                  No tienes direcciones guardadas. Por favor agrega una.
-                </Typography>
-              )}
-            </Grid>
-          </Box>
+          {selectedEntrega === "domicilio" && (
+            <Box mb={4}>
+              <Typography variant="h6" fontWeight="bold">
+                <Box
+                  component="span"
+                  sx={{
+                    display: "inline-flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    width: 30,
+                    height: 30,
+                    borderRadius: "50%",
+                    backgroundColor: "#568D2E",
+                    color: "white",
+                    fontWeight: "bold",
+                    mr: 1,
+                  }}
+                >
+                  2
+                </Box>
+                Dirección de envío
+              </Typography>
+              <Divider sx={{ mt: 2, mb: 3 }} />
+              <Grid container spacing={2}>
+                {direcciones.length > 0 ? (
+                  direcciones.map((direccion, index) => (
+                    <Grid item xs={12} sm={6} key={index}>
+                      <Card
+                        onClick={() => setSelectedDireccion(direccion)}
+                        sx={{
+                          p: 2,
+                          cursor: "pointer",
+                          border:
+                            selectedDireccion === direccion
+                              ? "2px solid #568D2E"
+                              : "2px solid #ccc",
+                          borderRadius: "8px",
+                          "&:hover": { borderColor: "#568D2E" },
+                        }}
+                      >
+                        <Typography variant="body1" fontWeight="bold">
+                          {direccion.name}
+                        </Typography>
+                        <Typography>
+                          {direccion.street}, {direccion.city}
+                        </Typography>
+                        <Typography>
+                          {direccion.state}, {direccion.country},{" "}
+                          {direccion.zip_code}
+                        </Typography>
+                      </Card>
+                    </Grid>
+                  ))
+                ) : (
+                  <Typography>
+                    No tienes direcciones guardadas. Por favor agrega una.
+                  </Typography>
+                )}
+              </Grid>
+            </Box>
+          )}
 
           {/* Paso 3: Formas de pago */}
           {selectedEntrega && (

@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import "@fontsource/poppins";
 import "bootstrap-icons/font/bootstrap-icons.css";
-import { AppBar, Box, Toolbar, Typography, IconButton, InputBase } from "@mui/material";
+import { AppBar, Box, Toolbar, Typography, Button, InputBase } from "@mui/material";
 import Image from "next/image";
 import CartDrawer from "../cart/Cart";
 
@@ -19,7 +19,7 @@ const Navbar = () => {
   const checkSession = () => {
     const user = JSON.parse(localStorage.getItem("user"));
     console.log("Usuario:", user);
-    
+
     if (user) {
       setIsLoggedIn(true);
       setUserRoles(user.role); // Asume que el objeto de usuario tiene una propiedad 'role' que es un array
@@ -77,6 +77,8 @@ const Navbar = () => {
 
   // Verifica si el usuario tiene el rol de "empleado" o "gerente"
   const hasAdminRole = userRoles.includes("empleado") || userRoles.includes("gerente");
+  console.log("Roles del usuario:", hasAdminRole);
+  
 
   return (
     <>
@@ -166,7 +168,7 @@ const Navbar = () => {
                 fontSize: "14px", // Tamaño de la fuente
               }}
             />
-            <IconButton
+            <Button
               onClick={handleSearch} // Ejecuta la búsqueda al hacer clic
               sx={{
                 backgroundColor: "#779341", // Fondo verde
@@ -183,7 +185,7 @@ const Navbar = () => {
               }}
             >
               <i className="bi bi-search"></i> {/* Icono de búsqueda de Bootstrap */}
-            </IconButton>
+            </Button>
           </Box>
 
           {/* Iconos de carrito, perfil y admin */}
@@ -195,23 +197,23 @@ const Navbar = () => {
             }}
           >
             {hasAdminRole && (
-              <IconButton onClick={handleAdminClick}>
+              <Button onClick={handleAdminClick}>
                 <Image
                   src="/img/gestion-de-proyectos.png" // Ruta de la imagen del admin
                   alt="Admin Dashboard"
                   width={30} // Ancho de la imagen
                   height={30} // Altura de la imagen
                 />
-              </IconButton>
+              </Button>
             )}
-            <IconButton onClick={handleCartClick}>
+            <Button onClick={handleCartClick}>
               <i className="bi bi-cart" style={{ fontSize: "30px", color: "black" }}></i>{" "}
               {/* Carrito de compras */}
-            </IconButton>
-            <IconButton onClick={handleProfileClick}>
+            </Button>
+            <Button onClick={handleProfileClick}>
               <i className="bi bi-person" style={{ fontSize: "30px", color: "black" }}></i>{" "}
               {/* Perfil */}
-            </IconButton>
+            </Button>
           </Box>
         </Toolbar>
       </AppBar>

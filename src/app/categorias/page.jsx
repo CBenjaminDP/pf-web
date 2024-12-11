@@ -60,7 +60,7 @@ function Categoria() {
         console.log("Productos obtenidos:", response.data);
         setProducts(response.data);
       } catch (error) {
-        console.error("Error al cargar los productos:", error);
+        console.log("Error al cargar los productos:", error);
       } finally {
         setLoading(false);
       }

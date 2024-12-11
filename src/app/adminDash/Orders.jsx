@@ -26,7 +26,9 @@ const Orders = () => {
       .get(`${process.env.NEXT_PUBLIC_API_URL}/api/sales`)
       .then((response) => {
         // Filtrar solo las órdenes con status "order"
-        const ordersFiltradas = response.data.filter((order) => order.status === "Pedido");
+        console.log(response.data);
+        
+        const ordersFiltradas = response.data.filter((order) => order.status === "pedido");
         setOrders(ordersFiltradas);
       })
       .catch((error) => console.error("Error al obtener órdenes:", error));

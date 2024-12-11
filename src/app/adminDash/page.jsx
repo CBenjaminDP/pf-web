@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useState, useEffect } from "react";
 import {
   Box,
@@ -105,7 +106,7 @@ const AdminDash = () => {
           <List>
             {/* Mostrar solo opciones permitidas según los roles */}
             {userRoles.includes("gerente") && (
-              <ListItem button onClick={() => handleScreenChange("sales")}>
+              <ListItem button onClick={() => handleScreenChange("sales")}> {/* Asegúrate de que button sea boolean */}
                 <ListItemIcon>
                   <Home
                     sx={{
@@ -117,7 +118,7 @@ const AdminDash = () => {
               </ListItem>
             )}
             {userRoles.includes("empleado") && (
-              <ListItem button onClick={() => handleScreenChange("products")}>
+              <ListItem button onClick={() => handleScreenChange("products")}> {/* Asegúrate de que button sea boolean */}
                 <ListItemIcon>
                   <ShoppingCart
                     sx={{
@@ -129,7 +130,7 @@ const AdminDash = () => {
               </ListItem>
             )}
             {userRoles.includes("gerente") && (
-              <ListItem button onClick={() => handleScreenChange("orders")}>
+              <ListItem button onClick={() => handleScreenChange("orders")}> {/* Asegúrate de que button sea boolean */}
                 <ListItemIcon>
                   <ListAlt
                     sx={{
@@ -141,7 +142,7 @@ const AdminDash = () => {
               </ListItem>
             )}
             {userRoles.includes("gerente") && (
-              <ListItem button onClick={() => handleScreenChange("promotions")}>
+              <ListItem button onClick={() => handleScreenChange("promotions")}> {/* Asegúrate de que button sea boolean */}
                 <ListItemIcon>
                   <Campaign
                     sx={{
@@ -154,7 +155,7 @@ const AdminDash = () => {
             )}
             {/* Nueva opción para Categorías */}
             {userRoles.includes("gerente") && (
-              <ListItem button onClick={() => handleScreenChange("categories")}>
+              <ListItem button onClick={() => handleScreenChange("categories")}> {/* Asegúrate de que button sea boolean */}
                 <ListItemIcon>
                   <CategoryIcon
                     sx={{
@@ -167,7 +168,7 @@ const AdminDash = () => {
             )}
             {/* Nueva opción para Usuarios */}
             {userRoles.includes("empleado") && (
-              <ListItem button onClick={() => handleScreenChange("users")}>
+              <ListItem button onClick={() => handleScreenChange("users")}> {/* Asegúrate de que button sea boolean */}
                 <ListItemIcon>
                   <PeopleIcon
                     sx={{
