@@ -68,19 +68,20 @@ const Products = () => {
       newErrors.precio = "El precio debe ser un número mayor a 0.";
     }
 
-    if (!product.image) {
-      newErrors.image = "Sube una imagen.";
-    } else if (product.image.size > 600000) {
-      newErrors.image = "La imagen debe ser menor a 600KB.";
-    } else if (
-      !["image/jpeg", "image/png", "image/jpg"].includes(product.image.type)
-    ) {
-      newErrors.image =
-        "El archivo debe ser una imagen válida (jpg, jpeg, png).";
+    // Validar imagen solo si es un nuevo archivo (instancia de File)
+    if (product.image instanceof File) {
+      if (product.image.size > 600000) {
+        newErrors.image = "La imagen debe ser menor a 600KB.";
+      } else if (
+        !["image/jpeg", "image/png", "image/jpg"].includes(product.image.type)
+      ) {
+        newErrors.image =
+          "El archivo debe ser una imagen válida (jpg, jpeg, png).";
+      }
     }
 
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return Object.keys(newErrors).length === 0; // Retorna true si no hay errores
   };
 
   // Maneja el cambio de los inputs en el formulario de creación
@@ -105,10 +106,12 @@ const Products = () => {
       return;
     }
 
+    const previewUrl = URL.createObjectURL(file);
+
     if (isEdit) {
-      setEditProduct({ ...editProduct, image: file });
+      setEditProduct({ ...editProduct, image: file, preview: previewUrl });
     } else {
-      setNewProduct({ ...newProduct, image: file });
+      setNewProduct({ ...newProduct, image: file, preview: previewUrl });
     }
   };
 
@@ -210,25 +213,25 @@ const Products = () => {
       toast.error("Por favor, corrige los errores antes de guardar.");
       return;
     }
-    
+
     const formData = new FormData();
 
-    // Asegúrate de que el precio sea un número antes de formatearlo
+    // Convertir precio y stock al formato correcto
     const formattedPrice =
       typeof editProduct.precio === "string"
         ? parseFloat(editProduct.precio.replace("$", ""))
         : editProduct.precio;
 
-    // Agregar los datos al FormData
     formData.append("name", editProduct.nombre);
     formData.append("description", editProduct.description);
     formData.append("stock", parseInt(editProduct.stock));
-    formData.append("price", formattedPrice); // Usar el precio formateado
+    formData.append("price", formattedPrice);
     formData.append("category_id", editProduct.categoria);
-    if (editProduct.promocion)
+    if (editProduct.promocion) {
       formData.append("promotion_id", editProduct.promocion);
+    }
 
-    // Si hay una imagen (nueva), agrégala al FormData
+    // Solo agrega la imagen si es un nuevo archivo
     if (editProduct.image instanceof File) {
       formData.append("image", editProduct.image);
     }
@@ -547,21 +550,12 @@ const Products = () => {
             <input type="file" hidden onChange={handleImageChange} />
           </Button>
           {/* Vista previa de la imagen actual */}
-          {editProduct?.image && (
-            <Box
-              sx={{
-                marginTop: "10px",
-                textAlign: "center",
-              }}
-            >
-              <Typography variant="body2">Imagen actual:</Typography>
+          {newProduct.preview && (
+            <Box sx={{ marginTop: "10px", textAlign: "center" }}>
+              <Typography variant="body2">Vista previa:</Typography>
               <img
-                src={
-                  typeof editProduct.image === "string"
-                    ? editProduct.image
-                    : URL.createObjectURL(editProduct.image)
-                }
-                alt="Imagen actual"
+                src={newProduct.preview}
+                alt="Vista previa"
                 style={{
                   maxWidth: "100%",
                   maxHeight: "150px",
