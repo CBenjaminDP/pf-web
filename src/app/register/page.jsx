@@ -1,4 +1,4 @@
-'use client'  
+"use client";
 import React, { useState } from "react";
 import "@fontsource/poppins";
 import {
@@ -22,11 +22,26 @@ const RegisterForm = () => {
     email: "",
     password: "",
     confirmPassword: "",
+    address: {
+      street: "",
+      city: "",
+      state: "",
+      zip_code: "",
+      country: "",
+    },
   });
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    if (name.startsWith("address.")) {
+      const field = name.split(".")[1];
+      setFormData((prev) => ({
+        ...prev,
+        address: { ...prev.address, [field]: value },
+      }));
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
   };
 
   const handleQuickRegister = async (e) => {
@@ -37,18 +52,24 @@ const RegisterForm = () => {
       return;
     }
 
+    console.log("Registrando usuario:", formData);
+    
+
     try {
-      const response = await fetch("http://localhost:3001/api/users/quick-register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          password: formData.password,
-          phone: formData.phone,
-          role: ["cliente"], // Rol predeterminado
-        }),
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/users/quick-register`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: formData.name,
+            email: formData.email,
+            password: formData.password,
+            phone: formData.phone,
+            address: formData.address, // Incluimos la dirección
+          }),
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -56,13 +77,22 @@ const RegisterForm = () => {
         return;
       }
 
-      toast.success("Usuario registrado con éxito. Ahora puedes iniciar sesión.");
+      toast.success(
+        "Usuario registrado con éxito. Ahora puedes iniciar sesión."
+      );
       setFormData({
         name: "",
         phone: "",
         email: "",
         password: "",
         confirmPassword: "",
+        address: {
+          street: "",
+          city: "",
+          state: "",
+          zip_code: "",
+          country: "",
+        },
       });
     } catch (error) {
       console.error("Error al registrar el usuario:", error);
@@ -118,15 +148,26 @@ const RegisterForm = () => {
               </Typography>
             </Box>
             <Box sx={{ textAlign: "right" }}>
-              <Link href="/login" underline="none" sx={{ fontSize: "11px", color: "#7CC448" }}>
+              <Link
+                href="/login"
+                underline="none"
+                sx={{ fontSize: "11px", color: "#7CC448" }}
+              >
                 ¿Ya tienes cuenta? Inicia sesión aquí
               </Link>
             </Box>
           </Box>
-          <Typography variant="h5" sx={{ fontWeight: "bold", marginBottom: "20px" }}>
+          <Typography
+            variant="h5"
+            sx={{ fontWeight: "bold", marginBottom: "20px" }}
+          >
             Regístrate
           </Typography>
-          <Box component="form" onSubmit={handleQuickRegister} sx={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+          <Box
+            component="form"
+            onSubmit={handleQuickRegister}
+            sx={{ display: "flex", flexDirection: "column", gap: "20px" }}
+          >
             <TextField
               label="Nombre"
               name="name"
@@ -179,6 +220,57 @@ const RegisterForm = () => {
                 />
               </Grid>
             </Grid>
+            <Typography
+              variant="h6"
+              sx={{ fontWeight: "bold", marginTop: "20px" }}
+            >
+              Dirección
+            </Typography>
+            <TextField
+              label="Calle"
+              name="address.street"
+              variant="outlined"
+              fullWidth
+              value={formData.address.street}
+              onChange={handleChange}
+              required
+            />
+            <TextField
+              label="Ciudad"
+              name="address.city"
+              variant="outlined"
+              fullWidth
+              value={formData.address.city}
+              onChange={handleChange}
+              required
+            />
+            <TextField
+              label="Estado"
+              name="address.state"
+              variant="outlined"
+              fullWidth
+              value={formData.address.state}
+              onChange={handleChange}
+              required
+            />
+            <TextField
+              label="Código Postal"
+              name="address.zip_code"
+              variant="outlined"
+              fullWidth
+              value={formData.address.zip_code}
+              onChange={handleChange}
+              required
+            />
+            <TextField
+              label="País"
+              name="address.country"
+              variant="outlined"
+              fullWidth
+              value={formData.address.country}
+              onChange={handleChange}
+              required
+            />
             <Button
               type="submit"
               variant="contained"
