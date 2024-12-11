@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import "@fontsource/poppins";
 import {
   Box,
@@ -30,6 +31,7 @@ const RegisterForm = () => {
       country: "",
     },
   });
+  const router = useRouter();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -80,6 +82,9 @@ const RegisterForm = () => {
       toast.success(
         "Usuario registrado con éxito. Ahora puedes iniciar sesión."
       );
+      setTimeout(() => {
+        router.push("/"); // Redirige a la página inicial
+      }, 1500);
       setFormData({
         name: "",
         phone: "",
