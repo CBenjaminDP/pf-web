@@ -34,6 +34,8 @@ const Promotions = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5; // Número de promociones por página
   const [errors, setErrors] = useState({});
+  const [selectedPromotion, setSelectedPromotion] = useState(null); // Promoción seleccionada
+  const [products, setProducts] = useState([]); // Productos de la promoción seleccionada
 
   const validatePromotion = (promotion) => {
     const newErrors = {};
@@ -82,6 +84,35 @@ const Promotions = () => {
     } catch (error) {
       console.error("Error fetching promotions:", error);
       toast.error("Error al obtener promociones.");
+    }
+  };
+
+  const fetchProducts = async (promotionId) => {
+    try {
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/promotions/${promotionId}`
+      );
+      console.log("Promotion data:", response.data);
+      
+
+      const promotion = response.data;
+      const discount = promotion.discount;
+
+      // Asegúrate de que response.data.products sea un array
+      const productsData = Array.isArray(promotion.products)
+        ? promotion.products.map((product) => ({
+            ...product,
+            discountedPrice: product.price
+              ? (product.price * (100 - discount)) / 100
+              : null, // Calcula el precio con descuento
+          }))
+        : [];
+
+      setProducts(productsData);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      toast.error("Error al obtener productos.");
+      setProducts([]); // Establece un array vacío como fallback
     }
   };
 
@@ -162,6 +193,11 @@ const Promotions = () => {
     }
   };
 
+  const handleViewProducts = (promotion) => {
+    setSelectedPromotion(promotion);
+    fetchProducts(promotion.promotion_id);
+  };
+
   const paginatedPromotions = promotions.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
@@ -182,6 +218,32 @@ const Promotions = () => {
     setEditPromotion(null);
     setErrors({});
   };
+
+  const handleSendNotification = async (product) => {
+    console.log("Enviando notificación para el producto:", product);
+    console.log("Promoción seleccionada:", selectedPromotion.promotion_id);
+    console.log("Producto seleccionado:", product.product_id);
+    
+    
+    
+    try {
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/promotions/send`,
+        {
+          product_id: product.product_id,
+          promotion_id: selectedPromotion.promotion_id,
+        }
+      );
+  
+      if (response.status === 200) {
+        toast.success("Notificación enviada con éxito.");
+      }
+    } catch (error) {
+      console.error("Error al enviar la notificación:", error);
+      toast.error("Error al enviar la notificación.");
+    }
+  };
+  
 
   return (
     <Box sx={{ padding: "20px" }}>
@@ -269,6 +331,14 @@ const Promotions = () => {
                     >
                       Eliminar
                     </Button>
+                    <Button
+                      variant="outlined"
+                      color="secondary"
+                      size="small"
+                      onClick={() => handleViewProducts(promo)}
+                    >
+                      Ver Productos
+                    </Button>
                   </Box>
                 </TableCell>
               </TableRow>
@@ -290,6 +360,75 @@ const Promotions = () => {
           shape="rounded"
         />
       </Box>
+
+      {selectedPromotion && (
+        <Box sx={{ marginTop: "40px" }}>
+          <Typography
+            variant="h6"
+            sx={{
+              fontFamily: "Poppins, sans-serif",
+              color: "#718EBF",
+              marginBottom: "20px",
+            }}
+          >
+            Productos de la promoción: {selectedPromotion.name}
+          </Typography>
+          <TableContainer
+            component={Paper}
+            sx={{ borderRadius: "10px", boxShadow: 3 }}
+          >
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell sx={{ color: "#718EBF", fontWeight: "bold" }}>
+                    Nombre del Producto
+                  </TableCell>
+                  <TableCell sx={{ color: "#718EBF", fontWeight: "bold" }}>
+                    Precio Original
+                  </TableCell>
+                  <TableCell sx={{ color: "#718EBF", fontWeight: "bold" }}>
+                    Precio con Descuento
+                  </TableCell>
+                  <TableCell sx={{ color: "#718EBF", fontWeight: "bold" }}>
+                    Cantidad
+                  </TableCell>
+                  <TableCell sx={{ color: "#718EBF", fontWeight: "bold" }}>
+                    Acciones
+                  </TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {products.map((product) => (
+                  <TableRow key={product.product_id}>
+                    <TableCell>{product.name}</TableCell>
+                    <TableCell>
+                      {product.price ? `$${product.price.toFixed(2)}` : "N/A"}
+                    </TableCell>
+                    <TableCell>
+                      {product.discountedPrice
+                        ? `$${product.discountedPrice.toFixed(2)}`
+                        : "N/A"}
+                    </TableCell>
+                    <TableCell>{product.stock}</TableCell>
+                    <TableCell>
+                      <Box sx={{ display: "flex", gap: "10px" }}>
+                        <Button
+                          variant="outlined"
+                          color="primary"
+                          size="small"
+                          onClick={() => handleSendNotification(product)}
+                        >
+                          Enviar Notificación
+                        </Button>
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Box>
+      )}
 
       {/* Modal para crear una promoción */}
       <Modal
