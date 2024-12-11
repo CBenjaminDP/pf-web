@@ -24,6 +24,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const Users = () => {
+  const [errors, setErrors] = useState({});
   const [modalOpen, setModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [users, setUsers] = useState([]);
@@ -42,6 +43,37 @@ const Users = () => {
     },
   });
   const [editUser, setEditUser] = useState(null);
+
+  const validateUser = (user) => {
+    const newErrors = {};
+  
+    if (!user.name?.trim()) newErrors.name = "El nombre es obligatorio.";
+    if (!user.email?.trim()) {
+      newErrors.email = "El correo electrónico es obligatorio.";
+    } else if (!/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/.test(user.email)) {
+      newErrors.email = "El correo electrónico no es válido.";
+    }
+    if (!user.password?.trim()) newErrors.password = "La contraseña es obligatoria.";
+    if (!user.role || user.role.length === 0) newErrors.role = "Debe seleccionar al menos un rol.";
+    if (!user.phone?.trim()) {
+      newErrors.phone = "El teléfono es obligatorio.";
+    } else if (!/^\d{10,15}$/.test(user.phone)) {
+      newErrors.phone = "El teléfono debe tener entre 10 y 15 dígitos.";
+    }
+    if (!user.address?.street?.trim()) newErrors["address.street"] = "La calle es obligatoria.";
+    if (!user.address?.city?.trim()) newErrors["address.city"] = "La ciudad es obligatoria.";
+    if (!user.address?.state?.trim()) newErrors["address.state"] = "El estado es obligatorio.";
+    if (!user.address?.zip_code?.trim()) {
+      newErrors["address.zip_code"] = "El código postal es obligatorio.";
+    } else if (!/^\d{4,6}$/.test(user.address.zip_code)) {
+      newErrors["address.zip_code"] = "El código postal debe ser un número válido.";
+    }
+    if (!user.address?.country?.trim()) newErrors["address.country"] = "El país es obligatorio.";
+  
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+  
 
   const fetchUsers = () => {
     axios
@@ -95,6 +127,11 @@ const Users = () => {
   };
 
   const handleCreateUser = () => {
+    if (!validateUser(newUser)) {
+      toast.error("Por favor, corrige los errores antes de guardar.");
+      return;
+    }
+
     axios
       .post(`${process.env.NEXT_PUBLIC_API_URL}/api/users`, newUser)
       .then((response) => {
@@ -124,6 +161,11 @@ const Users = () => {
   };
 
   const handleUpdateUser = () => {
+    if (!validateUser(editUser)) {
+      toast.error("Por favor, corrige los errores antes de guardar.");
+      return;
+    }
+
     axios
       .patch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/users/${editUser.id}`,
@@ -158,6 +200,33 @@ const Users = () => {
       });
   };
 
+
+  const handleCloseModal = () => {
+    setModalOpen(false);
+    setNewUser({
+      name: "",
+      email: "",
+      password: "",
+      role: [],
+      phone: "",
+      address: {
+        street: "",
+        city: "",
+        state: "",
+        zip_code: "",
+        country: "",
+      },
+    });
+    setErrors({});
+  };
+  
+  const handleCloseEditModal = () => {
+    setEditModalOpen(false);
+    setEditUser(null);
+    setErrors({});
+  };
+  
+
   return (
     <Box sx={{ padding: "20px" }}>
       <ToastContainer />
@@ -188,7 +257,10 @@ const Users = () => {
           + Crear Usuario
         </Button>
       </Box>
-      <TableContainer component={Paper} sx={{ borderRadius: "10px", boxShadow: 3 }}>
+      <TableContainer
+        component={Paper}
+        sx={{ borderRadius: "10px", boxShadow: 3 }}
+      >
         <Table>
           <TableHead>
             <TableRow>
@@ -238,7 +310,7 @@ const Users = () => {
       {/* Modal para crear usuario */}
       <Modal
         open={modalOpen}
-        onClose={() => setModalOpen(false)}
+        onClose={handleCloseModal}
         sx={{
           display: "flex",
           justifyContent: "center",
@@ -267,6 +339,8 @@ const Users = () => {
               name="name"
               value={newUser.name}
               onChange={handleNewUserChange}
+              error={!!errors.name}
+              helperText={errors.name}
             />
             <TextField
               label="Correo Electrónico"
@@ -275,6 +349,8 @@ const Users = () => {
               name="email"
               value={newUser.email}
               onChange={handleNewUserChange}
+              error={!!errors.email}
+              helperText={errors.email}
             />
             <TextField
               label="Contraseña"
@@ -284,6 +360,8 @@ const Users = () => {
               name="password"
               value={newUser.password}
               onChange={handleNewUserChange}
+              error={!!errors.password}
+              helperText={errors.password}
             />
             <FormControl fullWidth margin="normal">
               <InputLabel>Roles</InputLabel>
@@ -297,6 +375,11 @@ const Users = () => {
                 <MenuItem value="empleado">Empleado</MenuItem>
                 <MenuItem value="gerente">Gerente</MenuItem>
               </Select>
+              {errors.role && (
+                <Typography variant="caption" color="error">
+                  {errors.role}
+                </Typography>
+              )}
             </FormControl>
             <TextField
               label="Teléfono"
@@ -305,6 +388,8 @@ const Users = () => {
               name="phone"
               value={newUser.phone}
               onChange={handleNewUserChange}
+              error={!!errors.phone}
+              helperText={errors.phone}
             />
             <TextField
               label="Calle"
@@ -313,6 +398,8 @@ const Users = () => {
               name="address.street"
               value={newUser.address.street}
               onChange={handleNewUserChange}
+              error={!!errors["address.street"]}
+              helperText={errors["address.street"]}
             />
             <TextField
               label="Ciudad"
@@ -321,6 +408,8 @@ const Users = () => {
               name="address.city"
               value={newUser.address.city}
               onChange={handleNewUserChange}
+              error={!!errors["address.city"]}
+              helperText={errors["address.city"]}
             />
             <TextField
               label="Estado"
@@ -329,6 +418,8 @@ const Users = () => {
               name="address.state"
               value={newUser.address.state}
               onChange={handleNewUserChange}
+              error={!!errors["address.state"]}
+              helperText={errors["address.state"]}
             />
             <TextField
               label="Código Postal"
@@ -337,6 +428,8 @@ const Users = () => {
               name="address.zip_code"
               value={newUser.address.zip_code}
               onChange={handleNewUserChange}
+              error={!!errors["address.zip_code"]}
+              helperText={errors["address.zip_code"]}
             />
             <TextField
               label="País"
@@ -345,6 +438,8 @@ const Users = () => {
               name="address.country"
               value={newUser.address.country}
               onChange={handleNewUserChange}
+              error={!!errors["address.country"]}
+              helperText={errors["address.country"]}
             />
           </Box>
           <Button
@@ -361,7 +456,7 @@ const Users = () => {
       {/* Modal para editar usuario */}
       <Modal
         open={editModalOpen}
-        onClose={() => setEditModalOpen(false)}
+        onClose={handleCloseEditModal}
         sx={{
           display: "flex",
           justifyContent: "center",
@@ -390,6 +485,8 @@ const Users = () => {
               name="name"
               value={editUser?.name || ""}
               onChange={handleEditUserChange}
+              error={!!errors.name}
+              helperText={errors.name}
             />
             <TextField
               label="Correo Electrónico"
@@ -398,6 +495,8 @@ const Users = () => {
               name="email"
               value={editUser?.email || ""}
               onChange={handleEditUserChange}
+              error={!!errors.email}
+              helperText={errors.email}
             />
             <FormControl fullWidth margin="normal">
               <InputLabel>Roles</InputLabel>
@@ -411,6 +510,11 @@ const Users = () => {
                 <MenuItem value="empleado">Empleado</MenuItem>
                 <MenuItem value="gerente">Gerente</MenuItem>
               </Select>
+              {errors.role && (
+                <Typography variant="caption" color="error">
+                  {errors.role}
+                </Typography>
+              )}
             </FormControl>
             <TextField
               label="Teléfono"
@@ -419,6 +523,8 @@ const Users = () => {
               name="phone"
               value={editUser?.phone || ""}
               onChange={handleEditUserChange}
+              error={!!errors.phone}
+              helperText={errors.phone}
             />
             <TextField
               label="Calle"
@@ -427,6 +533,8 @@ const Users = () => {
               name="address.street"
               value={editUser?.address?.street || ""}
               onChange={handleEditUserChange}
+              error={!!errors["address.street"]}
+              helperText={errors["address.street"]}
             />
             <TextField
               label="Ciudad"
@@ -435,6 +543,8 @@ const Users = () => {
               name="address.city"
               value={editUser?.address?.city || ""}
               onChange={handleEditUserChange}
+              error={!!errors["address.city"]}
+              helperText={errors["address.city"]}
             />
             <TextField
               label="Estado"
@@ -443,6 +553,8 @@ const Users = () => {
               name="address.state"
               value={editUser?.address?.state || ""}
               onChange={handleEditUserChange}
+              error={!!errors["address.state"]}
+              helperText={errors["address.state"]}
             />
             <TextField
               label="Código Postal"
@@ -451,6 +563,8 @@ const Users = () => {
               name="address.zip_code"
               value={editUser?.address?.zip_code || ""}
               onChange={handleEditUserChange}
+              error={!!errors["address.zip_code"]}
+              helperText={errors["address.zip_code"]}
             />
             <TextField
               label="País"
@@ -459,6 +573,8 @@ const Users = () => {
               name="address.country"
               value={editUser?.address?.country || ""}
               onChange={handleEditUserChange}
+              error={!!errors["address.country"]}
+              helperText={errors["address.country"]}
             />
           </Box>
           <Button

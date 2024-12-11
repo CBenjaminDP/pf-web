@@ -37,7 +37,12 @@ function PerfilPage() {
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/api/salesProduct/${user.id}`
         );
-        if (!response.ok) throw new Error("Error al obtener los pedidos");
+
+        console.log("Respuesta de la API:", response);
+        if (response.status === 404) {
+          setError("No se encontraron pedidos.");
+          return;
+        }
 
         const data = await response.json();
         console.log("Pedidos obtenidos:", data);
@@ -57,7 +62,7 @@ function PerfilPage() {
         setPedidos(pedidosAdaptados);
       } catch (error) {
         setError("Error al cargar los pedidos.");
-        console.error("Error al obtener los pedidos:", error);
+        console.log("Error al obtener los pedidos:", error);
       }
     };
 

@@ -1,4 +1,4 @@
-'use client';
+"use client";
 import React, { useState, useEffect } from "react";
 import "@fontsource/poppins";
 import {
@@ -33,6 +33,41 @@ const Promotions = () => {
   const [editPromotion, setEditPromotion] = useState(null); // Estado para promoción en edición
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5; // Número de promociones por página
+  const [errors, setErrors] = useState({});
+
+  const validatePromotion = (promotion) => {
+    const newErrors = {};
+
+    if (!promotion.name.trim()) {
+      newErrors.name = "El nombre es obligatorio.";
+    } else if (promotion.name.length > 50) {
+      newErrors.name = "El nombre no puede tener más de 50 caracteres.";
+    }
+
+    if (!promotion.discount.trim()) {
+      newErrors.discount = "El descuento es obligatorio.";
+    } else if (
+      isNaN(promotion.discount) ||
+      promotion.discount <= 0 ||
+      promotion.discount > 100
+    ) {
+      newErrors.discount = "El descuento debe ser un número entre 1 y 100.";
+    }
+
+    if (!promotion.start_date) {
+      newErrors.start_date = "La fecha de inicio es obligatoria.";
+    }
+
+    if (!promotion.end_date) {
+      newErrors.end_date = "La fecha de fin es obligatoria.";
+    } else if (new Date(promotion.end_date) < new Date(promotion.start_date)) {
+      newErrors.end_date =
+        "La fecha de fin debe ser posterior a la fecha de inicio.";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0; // Retorna true si no hay errores
+  };
 
   useEffect(() => {
     fetchPromotions();
@@ -40,7 +75,9 @@ const Promotions = () => {
 
   const fetchPromotions = async () => {
     try {
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/promotions`);
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/promotions`
+      );
       setPromotions(response.data);
     } catch (error) {
       console.error("Error fetching promotions:", error);
@@ -59,11 +96,20 @@ const Promotions = () => {
   };
 
   const handleCreatePromotion = async () => {
+    if (!validatePromotion(newPromotion)) {
+      toast.error("Por favor, corrige los errores antes de guardar.");
+      return;
+    }
+
     try {
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/api/promotions`,
         newPromotion
       );
+      if (response.data.error) {
+        toast.error(response.data.error);
+        return;
+      }
       toast.success("Promoción creada exitosamente.");
       fetchPromotions();
       setModalOpen(false);
@@ -80,11 +126,19 @@ const Promotions = () => {
   };
 
   const handleUpdatePromotion = async () => {
+    if (!validatePromotion(editPromotion)) {
+      toast.error("Por favor, corrige los errores antes de guardar.");
+      return;
+    }
     try {
       const response = await axios.patch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/promotions/${editPromotion.promotion_id}`,
         editPromotion
       );
+      if (response.data.error) {
+        toast.error(response.data.error);
+        return;
+      }
       toast.success("Promoción actualizada exitosamente.");
       fetchPromotions();
       setEditModalOpen(false);
@@ -97,7 +151,9 @@ const Promotions = () => {
 
   const handleDeletePromotion = async (id) => {
     try {
-      await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/promotions/${id}`);
+      await axios.delete(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/promotions/${id}`
+      );
       toast.success("Promoción eliminada exitosamente.");
       fetchPromotions();
     } catch (error) {
@@ -113,6 +169,18 @@ const Promotions = () => {
 
   const handlePageChange = (event, value) => {
     setCurrentPage(value);
+  };
+
+  const handleCloseModal = () => {
+    setModalOpen(false);
+    setNewPromotion({ name: "", discount: "", start_date: "", end_date: "" });
+    setErrors({});
+  };
+
+  const handleCloseEditModal = () => {
+    setEditModalOpen(false);
+    setEditPromotion(null);
+    setErrors({});
   };
 
   return (
@@ -152,15 +220,28 @@ const Promotions = () => {
           + Crear Promoción
         </Button>
       </Box>
-      <TableContainer component={Paper} sx={{ borderRadius: "10px", boxShadow: 3 }}>
+      <TableContainer
+        component={Paper}
+        sx={{ borderRadius: "10px", boxShadow: 3 }}
+      >
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell sx={{ color: "#718EBF", fontWeight: "bold" }}>Nombre</TableCell>
-              <TableCell sx={{ color: "#718EBF", fontWeight: "bold" }}>Descuento (%)</TableCell>
-              <TableCell sx={{ color: "#718EBF", fontWeight: "bold" }}>Fecha de inicio</TableCell>
-              <TableCell sx={{ color: "#718EBF", fontWeight: "bold" }}>Fecha de fin</TableCell>
-              <TableCell sx={{ color: "#718EBF", fontWeight: "bold" }}>Acciones</TableCell>
+              <TableCell sx={{ color: "#718EBF", fontWeight: "bold" }}>
+                Nombre
+              </TableCell>
+              <TableCell sx={{ color: "#718EBF", fontWeight: "bold" }}>
+                Descuento (%)
+              </TableCell>
+              <TableCell sx={{ color: "#718EBF", fontWeight: "bold" }}>
+                Fecha de inicio
+              </TableCell>
+              <TableCell sx={{ color: "#718EBF", fontWeight: "bold" }}>
+                Fecha de fin
+              </TableCell>
+              <TableCell sx={{ color: "#718EBF", fontWeight: "bold" }}>
+                Acciones
+              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -213,7 +294,7 @@ const Promotions = () => {
       {/* Modal para crear una promoción */}
       <Modal
         open={modalOpen}
-        onClose={() => setModalOpen(false)}
+        onClose={handleCloseModal}
         sx={{
           display: "flex",
           alignItems: "center",
@@ -229,7 +310,10 @@ const Promotions = () => {
             width: "400px",
           }}
         >
-          <Typography variant="h6" sx={{ marginBottom: "20px", fontFamily: "Poppins, sans-serif" }}>
+          <Typography
+            variant="h6"
+            sx={{ marginBottom: "20px", fontFamily: "Poppins, sans-serif" }}
+          >
             Crear Promoción
           </Typography>
           <TextField
@@ -239,6 +323,8 @@ const Promotions = () => {
             name="name"
             value={newPromotion.name}
             onChange={handleNewPromotionChange}
+            error={errors.name ? true : false}
+            helperText={errors.name}
           />
           <TextField
             label="Descuento (%)"
@@ -247,6 +333,8 @@ const Promotions = () => {
             name="discount"
             value={newPromotion.discount}
             onChange={handleNewPromotionChange}
+            error={errors.discount ? true : false}
+            helperText={errors.discount}
           />
           <TextField
             label="Fecha de inicio"
@@ -257,6 +345,8 @@ const Promotions = () => {
             value={newPromotion.start_date}
             onChange={handleNewPromotionChange}
             InputLabelProps={{ shrink: true }}
+            error={errors.start_date ? true : false}
+            helperText={errors.start_date}
           />
           <TextField
             label="Fecha de fin"
@@ -267,9 +357,21 @@ const Promotions = () => {
             value={newPromotion.end_date}
             onChange={handleNewPromotionChange}
             InputLabelProps={{ shrink: true }}
+            error={errors.end_date ? true : false}
+            helperText={errors.end_date}
           />
-          <Box sx={{ display: "flex", justifyContent: "flex-end", marginTop: "20px" }}>
-            <Button variant="contained" color="primary" onClick={handleCreatePromotion}>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "flex-end",
+              marginTop: "20px",
+            }}
+          >
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleCreatePromotion}
+            >
               Guardar
             </Button>
           </Box>
@@ -279,7 +381,7 @@ const Promotions = () => {
       {/* Modal para actualizar una promoción */}
       <Modal
         open={editModalOpen}
-        onClose={() => setEditModalOpen(false)}
+        onClose={handleCloseEditModal}
         sx={{
           display: "flex",
           alignItems: "center",
@@ -295,7 +397,10 @@ const Promotions = () => {
             width: "400px",
           }}
         >
-          <Typography variant="h6" sx={{ marginBottom: "20px", fontFamily: "Poppins, sans-serif" }}>
+          <Typography
+            variant="h6"
+            sx={{ marginBottom: "20px", fontFamily: "Poppins, sans-serif" }}
+          >
             Actualizar Promoción
           </Typography>
           {editPromotion && (
@@ -307,6 +412,8 @@ const Promotions = () => {
                 name="name"
                 value={editPromotion.name}
                 onChange={handleEditPromotionChange}
+                error={errors.name ? true : false}
+                helperText={errors.name}
               />
               <TextField
                 label="Descuento (%)"
@@ -315,6 +422,8 @@ const Promotions = () => {
                 name="discount"
                 value={editPromotion.discount}
                 onChange={handleEditPromotionChange}
+                error={errors.discount ? true : false}
+                helperText={errors.discount}
               />
               <TextField
                 label="Fecha de inicio"
@@ -325,6 +434,8 @@ const Promotions = () => {
                 value={editPromotion.start_date.split("T")[0]}
                 onChange={handleEditPromotionChange}
                 InputLabelProps={{ shrink: true }}
+                error={errors.start_date ? true : false}
+                helperText={errors.start_date}
               />
               <TextField
                 label="Fecha de fin"
@@ -335,9 +446,21 @@ const Promotions = () => {
                 value={editPromotion.end_date.split("T")[0]}
                 onChange={handleEditPromotionChange}
                 InputLabelProps={{ shrink: true }}
+                error={errors.end_date ? true : false}
+                helperText={errors.end_date}
               />
-              <Box sx={{ display: "flex", justifyContent: "flex-end", marginTop: "20px" }}>
-                <Button variant="contained" color="primary" onClick={handleUpdatePromotion}>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  marginTop: "20px",
+                }}
+              >
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={handleUpdatePromotion}
+                >
                   Actualizar
                 </Button>
               </Box>

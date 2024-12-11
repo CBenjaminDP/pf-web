@@ -20,8 +20,8 @@ import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import NavCategorias from "../navcategorias/NavCategorias";
 
 const images = [
-  "https://i.pinimg.com/originals/1e/78/91/1e789149967aa9ecee20ef58911a9d17.jpg",
-  "https://iselamendez.mx/farmacia/wp-content/uploads/2024/11/Copia-de-WEB-jpg.webp",
+  "https://tecnyfarma.com/wp-content/uploads/2022/03/20200925-Farmacia-Libertad-Alcorcon-3-1.webp",
+  "https://apotalent.com/wp-content/uploads/2024/01/Requisitos-Esenciales-para-Trabajar-en-una-Farmacia-Guia-Profesional-para-una-Carrera-Exitosa-Blog-ApoTalent-1.jpg",
 ];
 
 function Landing() {
@@ -74,16 +74,6 @@ function Landing() {
     return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
 
-  const handleWheelScroll = (event) => {
-    event.preventDefault();
-    if (carouselRef.current) {
-      carouselRef.current.scrollBy({
-        left: event.deltaY < 0 ? -200 : 200,
-        behavior: "smooth",
-      });
-    }
-  };
-
   const handlePrevProduct = () => {
     if (carouselRef.current) {
       carouselRef.current.scrollBy({ left: -200, behavior: "smooth" });
@@ -108,7 +98,7 @@ function Landing() {
         <Box display="flex" flexDirection="column" alignItems="center" mt={0}>
           <Box
             mt={3}
-            width="100%"
+            width="60%"
             display="flex"
             flexDirection="column"
             alignItems="center"
@@ -125,7 +115,6 @@ function Landing() {
             width={carouselWidth}
             position="relative"
             overflow="hidden"
-            onWheel={handleWheelScroll}
           >
             <Typography
               variant="h5"
@@ -164,9 +153,9 @@ function Landing() {
               {loading ? (
                 <Typography>Cargando productos...</Typography>
               ) : products.length > 0 ? (
-                products.map((product) => (
+                products.map((product, index) => (
                   <Card
-                    key={product.id}
+                    key={product.id || index} // Usa el índice como respaldo si no existe un id
                     sx={{
                       minWidth: cardWidth,
                       maxWidth: cardWidth,
@@ -180,14 +169,14 @@ function Landing() {
                       component="img"
                       height="120"
                       image={
-                        product.image.startsWith("data:image/")
+                        product.image // Asegúrate de que el campo `image` contiene la URL de S3
                           ? product.image
-                          : `data:image/jpeg;base64,${product.image}`
+                          : "/default-image.jpg" // Imagen predeterminada si no hay URL
                       }
                       alt={product.name}
                       sx={{
                         objectFit: "contain",
-                        backgroundColor: "#ffff0",
+                        backgroundColor: "#f0f0f0", // Fondo gris claro como respaldo
                         borderRadius: 1,
                       }}
                     />
@@ -205,7 +194,9 @@ function Landing() {
                       </Typography>
                     </CardContent>
 
-                    <CardActions sx={{ justifyContent: "center", paddingTop: 0 }}>
+                    <CardActions
+                      sx={{ justifyContent: "center", paddingTop: 0 }}
+                    >
                       <Button
                         size="small"
                         variant="contained"

@@ -25,6 +25,21 @@ const Categories = () => {
   const [categories, setCategories] = useState([]); // Lista de categorías existentes
   const [newCategory, setNewCategory] = useState({ name: "" }); // Estado para la nueva categoría
   const [editCategory, setEditCategory] = useState(null); // Estado para la categoría en edición
+  const [errors, setErrors] = useState({});
+
+  const validateCategory = (category) => {
+    const newErrors = {};
+  
+    if (!category.name.trim()) {
+      newErrors.name = "El nombre de la categoría es obligatorio.";
+    } else if (category.name.length > 50) {
+      newErrors.name = "El nombre no puede tener más de 50 caracteres.";
+    }
+  
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0; // Retorna true si no hay errores
+  };
+  
 
   // Obtener las categorías desde la API
   useEffect(() => {
@@ -52,6 +67,11 @@ const Categories = () => {
 
   // Maneja la creación de una nueva categoría
   const handleCreateCategory = () => {
+    if (!validateCategory(newCategory)) {
+      toast.error("Por favor, corrige los errores antes de guardar.");
+      return;
+    }
+  
     axios
       .post(`${process.env.NEXT_PUBLIC_API_URL}/api/categories`, newCategory)
       .then((response) => {
@@ -59,12 +79,14 @@ const Categories = () => {
         fetchCategories();
         setModalOpen(false);
         setNewCategory({ name: "" });
+        setErrors({}); // Limpia los errores
       })
       .catch((error) => {
         console.error("Error creating category:", error);
         toast.error("Error al crear la categoría.");
       });
   };
+  
 
   // Maneja la eliminación de una categoría
   const handleDeleteCategory = (id) => {
@@ -88,6 +110,10 @@ const Categories = () => {
 
   // Maneja la actualización de una categoría
   const handleUpdateCategory = () => {
+    if (!validateCategory(editCategory)) {
+      toast.error("Por favor, corrige los errores antes de guardar.");
+      return;
+    }
     axios
       .patch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/categories/${editCategory.category_id}`,
@@ -102,6 +128,18 @@ const Categories = () => {
         console.error("Error updating category:", error);
         toast.error("Error al actualizar la categoría.");
       });
+  };
+
+  const handleCloseModal = () => {
+    setModalOpen(false);
+    setNewCategory({ name: "" });
+    setErrors({}); // Limpia los errores
+  };
+  
+  const handleCloseEditModal = () => {
+    setEditModalOpen(false);
+    setEditCategory(null);
+    setErrors({}); // Limpia los errores
   };
 
   return (
@@ -198,7 +236,7 @@ const Categories = () => {
       {/* Modal para crear una categoría */}
       <Modal
         open={modalOpen}
-        onClose={() => setModalOpen(false)}
+        onClose={handleCloseModal}
         sx={{
           display: "flex",
           alignItems: "center",
@@ -226,6 +264,8 @@ const Categories = () => {
             margin="normal"
             name="name"
             value={newCategory.name}
+            error={!!errors.name}
+            helperText={errors.name}
             onChange={handleNewCategoryChange}
           />
           <Box sx={{ display: "flex", justifyContent: "flex-end", marginTop: "20px" }}>
@@ -239,7 +279,7 @@ const Categories = () => {
       {/* Modal para editar una categoría */}
       <Modal
         open={editModalOpen}
-        onClose={() => setEditModalOpen(false)}
+        onClose={handleCloseEditModal}
         sx={{
           display: "flex",
           alignItems: "center",
@@ -267,6 +307,8 @@ const Categories = () => {
             margin="normal"
             name="name"
             value={editCategory?.name || ""}
+            error={!!errors.name}
+            helperText={errors.name}
             onChange={handleEditCategoryChange}
           />
           <Box sx={{ display: "flex", justifyContent: "flex-end", marginTop: "20px" }}>
